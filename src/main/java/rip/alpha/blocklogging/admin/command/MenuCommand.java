@@ -17,7 +17,7 @@ public final class MenuCommand {
     private final PanelButtons buttons;
 
     @Command(
-            names = {"bl menu", "bl panel", "blocklogging menu", "co menu"},
+            names = {"bl menu", "bl panel"},
             permission = Permissions.LOOKUP,
             description = "Open the BlockLogging control panel",
             playerOnly = true
@@ -27,7 +27,7 @@ public final class MenuCommand {
     }
 
     @Command(
-            names = {"bl gui", "blocklogging gui", "co gui"},
+            names = {"bl gui"},
             permission = Permissions.LOOKUP,
             description = "Open your last lookup in a menu",
             playerOnly = true

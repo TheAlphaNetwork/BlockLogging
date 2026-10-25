@@ -13,7 +13,7 @@ public final class InspectCommand {
     private final InspectService inspect;
 
     @Command(
-            names = {"bl inspect", "bl i", "blocklogging inspect", "blocklogging i", "co inspect", "co i"},
+            names = {"bl inspect", "bl i"},
             permission = Permissions.INSPECT,
             description = "Toggle the block inspector",
             playerOnly = true

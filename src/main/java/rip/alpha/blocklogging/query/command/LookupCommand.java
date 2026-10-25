@@ -33,7 +33,7 @@ public final class LookupCommand {
     private final ConfigStore configs;
 
     @Command(
-            names = {"bl lookup", "bl l", "blocklogging lookup", "blocklogging l", "co lookup", "co l"},
+            names = {"bl lookup", "bl l"},
             permission = Permissions.LOOKUP,
             description = "Search the logs, or open another page of the last search"
     )
@@ -62,7 +62,7 @@ public final class LookupCommand {
     }
 
     @Command(
-            names = {"bl near", "blocklogging near", "co near"},
+            names = {"bl near"},
             permission = Permissions.LOOKUP,
             description = "Show recent changes around you",
             playerOnly = true

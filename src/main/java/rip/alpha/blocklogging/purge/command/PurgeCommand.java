@@ -28,7 +28,7 @@ public final class PurgeCommand {
     private final ConfigStore configs;
 
     @Command(
-            names = {"bl purge", "blocklogging purge", "co purge"},
+            names = {"bl purge"},
             permission = Permissions.PURGE,
             description = "Delete logs older than the given time"
     )

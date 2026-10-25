@@ -27,7 +27,7 @@ public final class HelpCommand {
     );
 
     @Command(
-            names = {"bl", "bl help", "blocklogging", "blocklogging help", "co", "co help"},
+            names = {"bl", "bl help", "blocklogging", "co"},
             description = "Show the BlockLogging commands"
     )
     public void help(CommandSender sender) {

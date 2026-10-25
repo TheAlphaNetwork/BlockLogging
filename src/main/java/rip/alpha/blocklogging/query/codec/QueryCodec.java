@@ -21,14 +21,20 @@ public class QueryCodec {
 
         try (DataOutputStream output = new DataOutputStream(bytes)) {
             output.writeByte(VERSION);
+
             strings(output, query.users());
             strings(output, query.excludedUsers());
+
             output.writeLong(query.since());
             output.writeLong(query.until());
+
             RadiusCodec.write(output, query.radius());
+
             strings(output, query.actions().stream().map(Action::name).toList());
+
             types(output, query.include());
             types(output, query.exclude());
+
             strings(output, query.flags().stream().map(QueryFlag::name).toList());
         }
 

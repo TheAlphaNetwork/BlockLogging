@@ -11,7 +11,7 @@ import rip.alpha.libraries.command.annotation.Param;
 public final class TeleportCommand {
 
     @Command(
-            names = {"bl teleport", "bl tp", "blocklogging teleport", "blocklogging tp", "co teleport", "co tp"},
+            names = {"bl teleport", "bl tp"},
             permission = Permissions.TELEPORT,
             playerOnly = true,
             hidden = true

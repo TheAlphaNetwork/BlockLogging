@@ -26,7 +26,7 @@ public final class AdminCommand {
     private final RollbackService rollbacks;
 
     @Command(
-            names = {"bl status", "blocklogging status", "co status"},
+            names = {"bl status"},
             permission = Permissions.STATUS,
             description = "Show the logger and database status"
     )
@@ -44,7 +44,7 @@ public final class AdminCommand {
     }
 
     @Command(
-            names = {"bl reload", "blocklogging reload", "co reload"},
+            names = {"bl reload"},
             permission = Permissions.RELOAD,
             description = "Reload blocklogging.json"
     )
@@ -54,7 +54,7 @@ public final class AdminCommand {
     }
 
     @Command(
-            names = {"bl consumer", "blocklogging consumer", "co consumer"},
+            names = {"bl consumer"},
             permission = Permissions.CONSUMER,
             description = "Pause or resume writing logs to the database"
     )

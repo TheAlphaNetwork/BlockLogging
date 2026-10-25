@@ -26,7 +26,7 @@ public final class RollbackCommand {
     private final ConfigStore configs;
 
     @Command(
-            names = {"bl rollback", "bl rb", "blocklogging rollback", "blocklogging rb", "co rollback", "co rb"},
+            names = {"bl rollback", "bl rb"},
             permission = Permissions.ROLLBACK,
             description = "Undo changes that match the filters"
     )
@@ -35,7 +35,7 @@ public final class RollbackCommand {
     }
 
     @Command(
-            names = {"bl restore", "bl rs", "blocklogging restore", "blocklogging rs", "co restore", "co rs"},
+            names = {"bl restore", "bl rs"},
             permission = Permissions.RESTORE,
             description = "Redo changes that were rolled back"
     )
@@ -44,7 +44,7 @@ public final class RollbackCommand {
     }
 
     @Command(
-            names = {"bl undo", "blocklogging undo", "co undo"},
+            names = {"bl undo"},
             permission = Permissions.ROLLBACK,
             description = "Revert your last rollback or restore"
     )
@@ -52,12 +52,12 @@ public final class RollbackCommand {
         this.rollbacks.undo(sender);
     }
 
-    @Command(names = {"bl apply", "blocklogging apply", "co apply"}, permission = Permissions.ROLLBACK, playerOnly = true, hidden = true)
+    @Command(names = {"bl apply"}, permission = Permissions.ROLLBACK, playerOnly = true, hidden = true)
     public void apply(Player player) {
         this.rollbacks.previews().apply(player);
     }
 
-    @Command(names = {"bl cancel", "blocklogging cancel", "co cancel"}, permission = Permissions.ROLLBACK, playerOnly = true, hidden = true)
+    @Command(names = {"bl cancel"}, permission = Permissions.ROLLBACK, playerOnly = true, hidden = true)
     public void cancel(Player player) {
         this.rollbacks.previews().cancel(player);
     }
