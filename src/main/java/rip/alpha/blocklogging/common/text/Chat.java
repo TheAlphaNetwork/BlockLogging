@@ -14,6 +14,7 @@ public class Chat {
     public final String DARK = ChatColor.DARK_GRAY.toString();
     public final String GOOD = ChatColor.GREEN.toString();
     public final String BAD = ChatColor.RED.toString();
+    public final String SWAP = ChatColor.BLUE.toString();
     public final String PREFIX = PRIMARY + ChatColor.BOLD + "BL " + DARK + "\u00bb " + MUTED;
 
     public void info(CommandSender sender, String message) {

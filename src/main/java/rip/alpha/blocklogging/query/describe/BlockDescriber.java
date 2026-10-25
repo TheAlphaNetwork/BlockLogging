@@ -10,8 +10,17 @@ final class BlockDescriber implements RowDescriber {
 
     @Override
     public String describe(LookupRow row) {
+        LookupRow replaced = row.replaced();
+
+        if (replaced != null)
+            return Replacements.describe(label(replaced), label(row));
+
         String verb = row.action() >= 0 && row.action() < VERBS.length ? VERBS[row.action()] : Chat.MUTED + "changed";
 
-        return verb + " " + Chat.ACCENT + TypeLabels.block(row.type(), row.data());
+        return verb + " " + Chat.ACCENT + label(row);
+    }
+
+    private String label(LookupRow row) {
+        return TypeLabels.block(row.type(), row.data());
     }
 }

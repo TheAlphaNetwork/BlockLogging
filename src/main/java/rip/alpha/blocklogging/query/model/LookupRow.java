@@ -19,6 +19,7 @@ public record LookupRow(
         int amount,
         int action,
         boolean rolledBack,
-        @Nullable String text
+        @Nullable String text,
+        @Nullable LookupRow replaced
 ) {
 }

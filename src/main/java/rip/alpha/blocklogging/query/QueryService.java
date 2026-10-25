@@ -19,6 +19,7 @@ import rip.alpha.blocklogging.query.model.ResolvedQuery;
 import rip.alpha.blocklogging.query.model.SavedLookup;
 import rip.alpha.blocklogging.query.render.LookupRenderer;
 import rip.alpha.blocklogging.query.render.NameColoring;
+import rip.alpha.blocklogging.query.render.ReplacedRows;
 import rip.alpha.blocklogging.query.state.LastLookups;
 import rip.alpha.blocklogging.storage.exception.StoreException;
 import rip.alpha.blocklogging.storage.sql.read.LookupSql;
@@ -95,7 +96,7 @@ public final class QueryService {
     private void fetch(CommandSender sender, SavedLookup lookup, PageRequest request, BiConsumer<LookupPage, NameColors> show) {
 
         try {
-            LookupPage page = StaffCommands.redact(sender, this.store.lookup(lookup.query(), request));
+            LookupPage page = ReplacedRows.merge(StaffCommands.redact(sender, this.store.lookup(lookup.query(), request)));
 
             NameColors colors = NameColoring.of(page);
 
