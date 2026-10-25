@@ -32,8 +32,11 @@ public final class SqliteDialect implements Dialect {
         Connection connection = this.driver.connect("jdbc:sqlite:" + folder.resolve(config.getFile()), new Properties());
 
         try (Statement statement = connection.createStatement()) {
+            statement.execute("PRAGMA page_size=4096");
             statement.execute("PRAGMA journal_mode=WAL");
             statement.execute("PRAGMA synchronous=NORMAL");
+            statement.execute("PRAGMA wal_autocheckpoint=256");
+            statement.execute("PRAGMA journal_size_limit=1048576");
 
         }
 
