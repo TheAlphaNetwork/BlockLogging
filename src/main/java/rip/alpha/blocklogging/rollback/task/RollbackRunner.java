@@ -11,18 +11,23 @@ import rip.alpha.blocklogging.rollback.message.RollbackMessages;
 import rip.alpha.blocklogging.rollback.model.ApplyJob;
 import rip.alpha.blocklogging.rollback.model.Operation;
 import rip.alpha.blocklogging.rollback.model.RollbackPlan;
+import rip.alpha.blocklogging.rollback.model.RunKey;
 import rip.alpha.blocklogging.rollback.model.RunnerContext;
 import rip.alpha.blocklogging.rollback.plan.PlanLoader;
 import rip.alpha.blocklogging.storage.exception.StoreException;
 import rip.alpha.libraries.task.Tasks;
 
 import java.util.Locale;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 
 public final class RollbackRunner {
 
     private final AtomicInteger active = new AtomicInteger();
+
+    private final Set<RunKey> running = ConcurrentHashMap.newKeySet();
 
     private final RunnerContext context;
 
@@ -34,6 +39,12 @@ public final class RollbackRunner {
     }
 
     public void run(CommandSender sender, String owner, Operation operation) {
+
+        if (!this.running.add(RunKey.of(owner, operation))) {
+            Chat.error(sender, "That %s is already running.".formatted(operation.kind().getTitle().toLowerCase(Locale.ROOT)));
+            return;
+        }
+
         RollbackMessages.started(sender, operation);
         Tasks.async(() -> plan(sender, owner, operation));
     }
@@ -50,11 +61,13 @@ public final class RollbackRunner {
             Tasks.sync(this.context.plugin(), () -> execute(sender, owner, operation, plan));
 
         } catch (QueryException exception) {
+            release(owner, operation);
             Tasks.sync(this.context.plugin(), () -> Chat.error(sender, exception.getMessage()));
 
         } catch (StoreException exception) {
             String title = operation.kind().getTitle().toLowerCase(Locale.ROOT);
 
+            release(owner, operation);
             this.context.logger().log(Level.WARNING, "Could not plan a " + title, exception);
             Tasks.sync(this.context.plugin(), () -> Chat.error(sender, "The %s failed, check the console.".formatted(title)));
         }
@@ -62,6 +75,11 @@ public final class RollbackRunner {
 
     private void execute(CommandSender sender, String owner, Operation operation, RollbackPlan plan) {
         Query query = operation.query();
+
+        boolean applies = !plan.isEmpty() && !query.has(QueryFlag.COUNT) && !(query.has(QueryFlag.PREVIEW) && sender instanceof Player);
+
+        if (!applies)
+            release(owner, operation);
 
         if (plan.isEmpty()) {
             Chat.info(sender, "No matching changes were found.");
@@ -91,6 +109,7 @@ public final class RollbackRunner {
                 .done(result -> {
 
                     this.active.decrementAndGet();
+                    release(owner, operation);
                     this.context.operations().remember(owner, operation);
 
                     this.journal.finished(owner, operation);
@@ -102,5 +121,9 @@ public final class RollbackRunner {
 
         this.active.incrementAndGet();
         new ApplyTask(plan.changes(), job).runTaskTimer(this.context.plugin(), 1L, 1L);
+    }
+
+    private void release(String owner, Operation operation) {
+        this.running.remove(RunKey.of(owner, operation));
     }
 }

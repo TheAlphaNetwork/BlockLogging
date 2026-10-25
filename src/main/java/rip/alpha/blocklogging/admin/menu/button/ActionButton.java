@@ -2,6 +2,7 @@ package rip.alpha.blocklogging.admin.menu.button;
 
 import lombok.Builder;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
 import rip.alpha.libraries.menu.button.Button;
 import rip.alpha.libraries.menu.editor.MenuSounds;
@@ -28,6 +29,9 @@ public final class ActionButton extends Button {
 
     @Override
     public void click(Player player, ClickContext context) {
+
+        if (context.type() == ClickType.DOUBLE_CLICK)
+            return;
 
         if (this.permission != null && !player.hasPermission(this.permission)) {
             MenuSounds.fail(player);
