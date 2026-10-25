@@ -1,7 +1,9 @@
 package rip.alpha.blocklogging.rollback.apply;
 
+import com.github.retrooper.packetevents.PacketEvents;
+import com.github.retrooper.packetevents.util.Vector3i;
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerBlockChange;
 import lombok.experimental.UtilityClass;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -14,16 +16,16 @@ import java.util.List;
 @SuppressWarnings("deprecation")
 public class PreviewBlocks {
 
+    private final int DATA_MASK = 15;
+
     public void show(Player player, List<BlockTarget> targets) {
+        String world = player.getWorld().getName();
 
         for (BlockTarget target : targets) {
-
-            Location location = target.position().center();
-
             Material material = Material.getMaterial(target.type());
 
-            if (location != null && material != null && material.isBlock() && location.getWorld().equals(player.getWorld()))
-                player.sendBlockChange(location, material, (byte) target.data());
+            if (material != null && material.isBlock() && target.position().world().equals(world))
+                send(player, target.position(), target.type(), target.data());
         }
     }
 
@@ -33,7 +35,13 @@ public class PreviewBlocks {
             Block block = position.block();
 
             if (block != null && block.getWorld().equals(player.getWorld()))
-                player.sendBlockChange(block.getLocation(), block.getType(), block.getData());
+                send(player, position, block.getTypeId(), block.getData());
         }
+    }
+
+    private void send(Player player, BlockPosition position, int type, int data) {
+        Vector3i vector = new Vector3i(position.x(), position.y(), position.z());
+
+        PacketEvents.getAPI().getPlayerManager().sendPacket(player, new WrapperPlayServerBlockChange(vector, type << 4 | data & DATA_MASK));
     }
 }
