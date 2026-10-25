@@ -19,7 +19,7 @@ public final class ChatListener implements Listener {
 
     private final RecordService records;
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onChat(AsyncPlayerChatEvent event) {
 
         if (this.records.logging().isChat())
