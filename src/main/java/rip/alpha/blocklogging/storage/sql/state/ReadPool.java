@@ -7,40 +7,30 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 @RequiredArgsConstructor
 public final class ReadPool {
 
     private static final int IDLE = 4;
+    private static final int MAX_OPEN = 8;
+
+    private static final long WAIT_SECONDS = 10;
 
     private final BlockingQueue<Connection> idle = new ArrayBlockingQueue<>(IDLE);
+
+    private final Semaphore permits = new Semaphore(MAX_OPEN, true);
 
     private final ConnectionSource source;
 
     public <T> T read(SqlRead<T> read) throws SQLException {
-        Connection connection = borrow();
+        acquire();
 
         try {
-            T result = read.read(connection);
-
-            release(connection);
-            return result;
-
-        } catch (SQLException exception) {
-            discard(connection);
-
-            Connection fresh = this.source.open();
-
-            try {
-                T result = read.read(fresh);
-
-                release(fresh);
-                return result;
-
-            } catch (SQLException retry) {
-                discard(fresh);
-                throw retry;
-            }
+            return attempt(read);
+        } finally {
+            this.permits.release();
         }
     }
 
@@ -49,6 +39,47 @@ public final class ReadPool {
 
         while ((connection = this.idle.poll()) != null)
             discard(connection);
+    }
+
+    private <T> T attempt(SqlRead<T> read) throws SQLException {
+        Connection connection = borrow();
+
+        try {
+            return run(connection, read);
+        } catch (SQLException exception) {
+            return run(this.source.open(), read);
+        }
+    }
+
+    private <T> T run(Connection connection, SqlRead<T> read) throws SQLException {
+        boolean healthy = false;
+
+        try {
+            T result = read.read(connection);
+
+            healthy = true;
+            return result;
+
+        } finally {
+
+            if (healthy)
+                release(connection);
+            else
+                discard(connection);
+        }
+    }
+
+    private void acquire() throws SQLException {
+
+        try {
+
+            if (!this.permits.tryAcquire(WAIT_SECONDS, TimeUnit.SECONDS))
+                throw new SQLException("All %d read connections are busy".formatted(MAX_OPEN));
+
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            throw new SQLException("Interrupted while waiting for a read connection", exception);
+        }
     }
 
     private Connection borrow() throws SQLException {
