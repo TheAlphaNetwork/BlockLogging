@@ -3,9 +3,11 @@ package rip.alpha.blocklogging.rollback;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.Plugin;
+import rip.alpha.blocklogging.common.permission.Permissions;
 import rip.alpha.blocklogging.common.text.Chat;
 import rip.alpha.blocklogging.config.ConfigStore;
 import rip.alpha.blocklogging.record.RecordService;
+import rip.alpha.blocklogging.rollback.guard.WideRollbacks;
 import rip.alpha.blocklogging.rollback.model.Operation;
 import rip.alpha.blocklogging.rollback.model.OperationRecord;
 import rip.alpha.blocklogging.rollback.model.RunnerContext;
@@ -28,6 +30,8 @@ public final class RollbackService {
 
     private final Logger logger;
 
+    private final ConfigStore configs;
+
     private final LastOperations operations = new LastOperations();
 
     private final PreviewService previews = new PreviewService(this);
@@ -38,6 +42,7 @@ public final class RollbackService {
         this.plugin = plugin;
         this.store = store;
         this.logger = logger;
+        this.configs = configs;
         this.runner = new RollbackRunner(RunnerContext.builder()
                 .plugin(plugin)
                 .store(store)
@@ -50,18 +55,30 @@ public final class RollbackService {
     }
 
     public void run(CommandSender sender, Operation operation) {
-        this.runner.run(sender, sender.getName(), operation);
-    }
+        int maxRadius = this.configs.getConfig().getRollback().getMaxRadius();
 
-    public void undo(CommandSender sender) {
-        Operation last = this.operations.last(sender.getName());
-
-        if (last == null) {
-            Chat.error(sender, "You have nothing to undo.");
+        if (WideRollbacks.blocked(sender, operation.query(), maxRadius)) {
+            Chat.error(sender, "Rolling back a whole world or the whole server needs %s.".formatted(Permissions.ROLLBACK_GLOBAL));
             return;
         }
 
-        run(sender, last.inverse());
+        this.runner.run(sender, sender.getName(), operation);
+    }
+
+    public void undo(CommandSender sender, String owner) {
+        Operation last = this.operations.last(owner);
+
+        boolean self = owner.equalsIgnoreCase(sender.getName());
+
+        if (last == null) {
+            Chat.error(sender, self ? "You have nothing to undo." : "%s has nothing to undo.".formatted(owner));
+            return;
+        }
+
+        Operation inverse = last.inverse();
+
+        this.operations.undone(inverse);
+        this.runner.run(sender, sender.getName(), inverse);
     }
 
     public void restore() {
@@ -89,6 +106,7 @@ public final class RollbackService {
     private void restore(OperationRecord record) {
 
         if (record.state() == OperationState.DONE) {
+            this.operations.undone(record.operation());
             this.operations.remember(record.sender(), record.operation());
             return;
         }

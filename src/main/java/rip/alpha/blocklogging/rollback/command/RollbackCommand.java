@@ -13,6 +13,7 @@ import rip.alpha.blocklogging.rollback.model.Operation;
 import rip.alpha.blocklogging.rollback.type.RollbackKind;
 import rip.alpha.libraries.command.annotation.Command;
 import rip.alpha.libraries.command.annotation.Param;
+import rip.alpha.libraries.command.execute.CommandMessages;
 
 import java.util.Locale;
 
@@ -46,10 +47,17 @@ public final class RollbackCommand {
     @Command(
             names = {"bl undo"},
             permission = Permissions.ROLLBACK,
-            description = "Revert your last rollback or restore"
+            description = "Revert your last rollback or restore, or another player's with blocklogging.undo.others"
     )
-    public void undo(CommandSender sender) {
-        this.rollbacks.undo(sender);
+    public void undo(CommandSender sender, @Param(name = "player", defaultValue = " ") String player) {
+        String owner = player.isBlank() ? sender.getName() : player.trim();
+
+        if (!owner.equalsIgnoreCase(sender.getName()) && !sender.hasPermission(Permissions.UNDO_OTHERS)) {
+            sender.sendMessage(CommandMessages.NO_PERMISSION);
+            return;
+        }
+
+        this.rollbacks.undo(sender, owner);
     }
 
     @Command(names = {"bl apply"}, permission = Permissions.ROLLBACK, playerOnly = true, hidden = true)

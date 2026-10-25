@@ -79,7 +79,7 @@ public final class PanelButtons {
                 .icon(_ -> icon(Material.WATCH, "Undo", "Revert your last rollback", "or restore."))
                 .permission(Permissions.ROLLBACK)
                 .close(true)
-                .action(this.rollbacks::undo)
+                .action(viewer -> this.rollbacks.undo(viewer, viewer.getName()))
                 .build();
     }
 

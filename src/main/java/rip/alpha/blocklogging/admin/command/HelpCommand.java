@@ -21,6 +21,7 @@ public final class HelpCommand {
             new HelpEntry("/bl rollback ", "Undo changes, same filters as lookup, plus #preview #count", Permissions.ROLLBACK),
             new HelpEntry("/bl restore ", "Redo changes that were rolled back", Permissions.RESTORE),
             new HelpEntry("/bl undo", "Revert your last rollback or restore", Permissions.ROLLBACK),
+            new HelpEntry("/bl undo ", "<player>, revert another player's last rollback or restore", Permissions.UNDO_OTHERS),
             new HelpEntry("/bl purge ", "t:<time> [r:#world] [#optimize], delete old logs", Permissions.PURGE),
             new HelpEntry("/bl status", "Logger and database status", Permissions.STATUS),
             new HelpEntry("/bl consumer", "Pause or resume the database writer", Permissions.CONSUMER),
