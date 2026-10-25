@@ -1,0 +1,6 @@
+name: BlockLogging
+version: ${git.build.version}-${git.commit.id.abbrev}
+main: rip.alpha.blocklogging.BlockLogging
+authors: [Alpha Development Team]
+depend:
+  - Libraries
