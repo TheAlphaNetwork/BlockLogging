@@ -20,6 +20,7 @@ public final class LookupSql {
 
     private static final String UNION = " UNION ALL ";
     private static final String MEMBER = "SELECT * FROM (%s ORDER BY time DESC, id DESC LIMIT %d) m%d";
+    private static final String SINGLE = "%s ORDER BY time DESC, id DESC LIMIT %d";
     private static final String JOINED = "SELECT r.*, u.name AS user_name, w.name AS world_name FROM (%s) r JOIN %s u ON u.id = r.user ";
     private static final String ORDERED = "LEFT JOIN %s w ON w.id = r.world ORDER BY r.time DESC, r.id DESC LIMIT %d";
 
@@ -42,9 +43,11 @@ public final class LookupSql {
         if (this.filters.isEmpty())
             return LookupPage.builder().rows(List.of()).total(0).page(page).pageSize(size).build();
 
-        int total = count();
+        int limit = page * size;
 
-        List<LookupRow> rows = total == 0 ? List.of() : rows(page * size);
+        List<LookupRow> rows = rows(limit);
+
+        int total = rows.size() < limit ? rows.size() : count();
 
         int from = Math.min(rows.size(), (page - 1) * size);
 
@@ -92,7 +95,7 @@ public final class LookupSql {
 
             String inner = Projections.select(table, this.storage.table(table)) + this.wheres.get(index).sql();
 
-            parts.add(MEMBER.formatted(inner, limit, index));
+            parts.add(this.filters.size() == 1 ? SINGLE.formatted(inner, limit) : MEMBER.formatted(inner, limit, index));
         }
 
         String joined = JOINED.formatted(String.join(UNION, parts), this.storage.table(Tables.USER));

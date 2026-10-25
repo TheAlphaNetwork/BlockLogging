@@ -36,7 +36,7 @@ public class QueryResolver {
         Integer world = null;
 
         if (query.radius().world() != null) {
-            Integer found = WorldIds.find(connection, storage, query.radius().world());
+            Integer found = storage.getWorlds().find(connection, query.radius().world());
 
             world = found == null ? MISSING_WORLD : found;
         }

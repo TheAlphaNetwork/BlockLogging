@@ -22,6 +22,8 @@ import rip.alpha.blocklogging.storage.sql.read.QueryResolver;
 import rip.alpha.blocklogging.storage.sql.read.SignLookup;
 import rip.alpha.blocklogging.storage.sql.read.SqlRead;
 import rip.alpha.blocklogging.storage.sql.schema.SchemaInstaller;
+import rip.alpha.blocklogging.storage.sql.state.ReadPool;
+import rip.alpha.blocklogging.storage.sql.state.WorldCache;
 import rip.alpha.blocklogging.storage.sql.write.SqlWriter;
 import rip.alpha.blocklogging.storage.store.LogStore;
 import rip.alpha.blocklogging.storage.type.LogTable;
@@ -31,7 +33,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +48,11 @@ public final class SqlStore implements LogStore {
     private final Dialect dialect;
 
     private final SqlWriter writer;
+
+    private final ReadPool reads = new ReadPool(this::connect);
+
+    @Getter
+    private final WorldCache worlds = new WorldCache(this);
 
     public SqlStore(StorageConfig config, Path folder, Logger logger) {
         this.config = config;
@@ -75,6 +81,7 @@ public final class SqlStore implements LogStore {
     @Override
     public void close() {
         this.writer.close();
+        this.reads.close();
     }
 
     @Override
@@ -129,16 +136,10 @@ public final class SqlStore implements LogStore {
 
     private <T> T read(String error, SqlRead<T> read) throws StoreException {
 
-        try (Connection connection = connect()) {
-            return read.read(connection);
+        try {
+            return this.reads.read(read);
         } catch (SQLException exception) {
             throw new StoreException(error, exception);
         }
-    }
-
-    public List<String> logTables() {
-        return Arrays.stream(LogTable.values())
-                .map(this::table)
-                .toList();
     }
 }

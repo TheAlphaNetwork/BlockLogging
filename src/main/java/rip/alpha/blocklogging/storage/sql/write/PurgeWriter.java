@@ -5,11 +5,14 @@ import rip.alpha.blocklogging.record.model.PurgeRequest;
 import rip.alpha.blocklogging.record.model.PurgeResult;
 import rip.alpha.blocklogging.storage.sql.SqlStore;
 import rip.alpha.blocklogging.storage.sql.state.WorldIds;
+import rip.alpha.blocklogging.storage.type.LogTable;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
+import java.util.List;
 
 @UtilityClass
 public class PurgeWriter {
@@ -32,14 +35,14 @@ public class PurgeWriter {
 
         int rows = 0;
 
-        for (String table : storage.logTables())
+        for (String table : tables(storage))
             rows += delete(connection, table, request.before(), world);
 
         if (request.optimize()) {
 
             try (Statement statement = connection.createStatement()) {
 
-                for (String sql : storage.getDialect().optimize(storage.logTables()))
+                for (String sql : storage.getDialect().optimize(tables(storage)))
                     statement.execute(sql);
             }
         }
@@ -58,5 +61,11 @@ public class PurgeWriter {
 
             return statement.executeUpdate();
         }
+    }
+
+    private List<String> tables(SqlStore storage) {
+        return Arrays.stream(LogTable.values())
+                .map(storage::table)
+                .toList();
     }
 }
