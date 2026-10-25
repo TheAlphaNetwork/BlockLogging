@@ -12,9 +12,11 @@ import java.util.List;
 public final class HelpCommand {
 
     private static final List<HelpEntry> ENTRIES = List.of(
+            new HelpEntry("/bl menu", "Control panel: inspector, nearby changes, rollback builder", Permissions.LOOKUP),
             new HelpEntry("/bl inspect", "Toggle the inspector, then click blocks and containers", Permissions.INSPECT),
             new HelpEntry("/bl lookup ", "u:<user> t:<time> r:<radius> a:<action> i:<include> e:<exclude>", Permissions.LOOKUP),
             new HelpEntry("/bl near", "Recent changes around you", Permissions.LOOKUP),
+            new HelpEntry("/bl gui", "Open your last lookup as a menu", Permissions.LOOKUP),
             new HelpEntry("/bl rollback ", "Undo changes, same filters as lookup, plus #preview #count", Permissions.ROLLBACK),
             new HelpEntry("/bl restore ", "Redo changes that were rolled back", Permissions.RESTORE),
             new HelpEntry("/bl undo", "Revert your last rollback or restore", Permissions.ROLLBACK),

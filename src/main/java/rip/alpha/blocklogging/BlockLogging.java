@@ -5,7 +5,9 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import rip.alpha.blocklogging.admin.command.AdminCommand;
 import rip.alpha.blocklogging.admin.command.HelpCommand;
+import rip.alpha.blocklogging.admin.command.MenuCommand;
 import rip.alpha.blocklogging.admin.command.TeleportCommand;
+import rip.alpha.blocklogging.admin.menu.PanelButtons;
 import rip.alpha.blocklogging.config.ConfigStore;
 import rip.alpha.blocklogging.inspect.InspectService;
 import rip.alpha.blocklogging.inspect.command.InspectCommand;
@@ -85,6 +87,7 @@ public final class BlockLogging extends JavaPlugin {
                 new RollbackCommand(this.rollbacks, this.configStore),
                 new PurgeCommand(purges, this.configStore),
                 new AdminCommand(this, this.configStore, this.storage, this.records, this.rollbacks),
+                new MenuCommand(this.queries, new PanelButtons(inspect, this.queries, this.rollbacks, this.records, this.configStore)),
                 new TeleportCommand()
         );
     }

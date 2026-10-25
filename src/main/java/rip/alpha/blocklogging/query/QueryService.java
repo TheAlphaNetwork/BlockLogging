@@ -3,10 +3,12 @@ package rip.alpha.blocklogging.query;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import rip.alpha.blocklogging.common.text.Chat;
 import rip.alpha.blocklogging.config.ConfigStore;
 import rip.alpha.blocklogging.query.exception.QueryException;
+import rip.alpha.blocklogging.query.menu.LookupMenu;
 import rip.alpha.blocklogging.query.model.LookupPage;
 import rip.alpha.blocklogging.query.model.LookupView;
 import rip.alpha.blocklogging.query.model.PageRequest;
@@ -57,6 +59,30 @@ public final class QueryService {
         }
 
         Tasks.async(() -> run(sender, lookup, new PageRequest(Math.max(1, request.page()), pageSize(request.size()))));
+    }
+
+    public void menu(Player player, Query query, LookupView view) {
+        SavedLookup lookup = new SavedLookup(query, view);
+
+        this.lastLookups.remember(player, lookup);
+        menu(player, lookup, 1);
+    }
+
+    public void menu(Player player, int page) {
+        SavedLookup lookup = this.lastLookups.last(player);
+
+        if (lookup == null) {
+            Chat.error(player, "Run a lookup first.");
+            return;
+        }
+
+        menu(player, lookup, page);
+    }
+
+    public void menu(Player player, SavedLookup lookup, int page) {
+        PageRequest request = new PageRequest(Math.max(1, page), LookupMenu.ROWS_PER_PAGE);
+
+        Tasks.async(() -> fetch(player, lookup, request, result -> new LookupMenu(this, lookup, result).open(player)));
     }
 
     private void run(CommandSender sender, SavedLookup lookup, PageRequest request) {

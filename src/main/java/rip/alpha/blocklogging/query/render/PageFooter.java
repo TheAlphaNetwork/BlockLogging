@@ -21,6 +21,9 @@ public class PageFooter {
         if (page.page() < page.pages())
             footer.then(Chat.ACCENT + "Next »").run(COMMAND + (page.page() + 1)).hover(Chat.MUTED + "Next page");
 
+        String label = Chat.DARK + "  [" + Chat.ACCENT + "GUI" + Chat.DARK + "]";
+
+        footer.then(label).run("/bl gui").hover(Chat.MUTED + "Open these results in a menu");
 
         return footer;
     }
