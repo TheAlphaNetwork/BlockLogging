@@ -16,6 +16,8 @@ public final class RollbackDraft {
     private int radius = 1;
     private int scope;
 
+    private boolean selection;
+
     @Nullable
     private String target;
 
@@ -27,11 +29,12 @@ public final class RollbackDraft {
         return RADII[this.radius];
     }
 
-    public void nextTime() {
-        this.time = (this.time + 1) % TIMES.length;
+    public String radiusLabel() {
+        return this.selection ? "WorldEdit selection" : this.blocks() + " blocks";
     }
 
-    public void nextRadius() {
-        this.radius = (this.radius + 1) % RADII.length;
+    public void pickRadius(int index) {
+        this.radius = index;
+        this.selection = false;
     }
 }

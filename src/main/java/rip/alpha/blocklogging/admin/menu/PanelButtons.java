@@ -70,7 +70,7 @@ public final class PanelButtons {
         return ActionButton.builder()
                 .icon(_ -> icon(Material.TNT, "Rollback Builder", "Pick a time, radius and player,", "preview it, then roll back."))
                 .permission(Permissions.ROLLBACK)
-                .action(viewer -> new RollbackMenu(this.rollbacks).open(viewer))
+                .action(viewer -> new RollbackMenu(this.rollbacks, new PanelMenu(this)).open(viewer))
                 .build();
     }
 

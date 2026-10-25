@@ -1,6 +1,7 @@
 package rip.alpha.blocklogging.rollback.menu;
 
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Nullable;
 import rip.alpha.blocklogging.common.text.Chat;
 import rip.alpha.blocklogging.rollback.RollbackService;
 import rip.alpha.blocklogging.rollback.state.RollbackDraft;
@@ -16,8 +17,8 @@ public final class RollbackMenu extends Menu {
 
     private final RollbackButtons buttons;
 
-    public RollbackMenu(RollbackService rollbacks) {
-        this.buttons = new RollbackButtons(this, this.draft, rollbacks);
+    public RollbackMenu(RollbackService rollbacks, @Nullable Menu parent) {
+        this.buttons = new RollbackButtons(this, parent, this.draft, rollbacks);
     }
 
     @Override
@@ -27,7 +28,7 @@ public final class RollbackMenu extends Menu {
 
     @Override
     public int size() {
-        return 36;
+        return 54;
     }
 
     @Override

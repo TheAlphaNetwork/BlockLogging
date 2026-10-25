@@ -10,7 +10,6 @@ import rip.alpha.blocklogging.rollback.state.RollbackDraft;
 import rip.alpha.libraries.item.ItemBuilder;
 import rip.alpha.libraries.menu.Menu;
 import rip.alpha.libraries.menu.button.Button;
-import rip.alpha.libraries.menu.editor.Lore;
 import rip.alpha.libraries.menu.editor.MenuSounds;
 import rip.alpha.libraries.menu.model.ClickContext;
 
@@ -25,12 +24,14 @@ public final class TargetButton extends Button {
     public ItemStack item(Player player) {
         String target = this.draft.getTarget();
 
-        ItemBuilder item = ItemBuilder.of(Material.SKULL_ITEM, 3).name(Chat.PRIMARY + "Player");
+        String name = target == null ? Chat.ACCENT + "Pick a player" : Chat.GOOD + target;
+
+        ItemBuilder item = ItemBuilder.of(Material.SKULL_ITEM, 3).name(name).glow(target != null);
 
         if (target != null)
             item.skullOwner(target);
 
-        return item.lore(Lore.value("Current", target == null ? "Everyone" : target), "", Chat.ACCENT + "Click to pick a player").build();
+        return item.lore(Chat.MUTED + "Click to pick an online player").build();
     }
 
     @Override

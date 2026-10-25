@@ -9,14 +9,14 @@ import rip.alpha.libraries.menu.editor.Lore;
 import java.util.List;
 
 @UtilityClass
-class DraftSummary {
+public class DraftSummary {
 
-    List<String> lines(RollbackDraft draft) {
+    public List<String> lines(RollbackDraft draft) {
         String target = draft.getTarget() == null ? "Everyone" : draft.getTarget();
 
         return Lore.lines(
-                Lore.value("Time", TimeLabels.of(draft.seconds())),
-                Lore.value("Radius", draft.blocks() + " blocks"),
+                Lore.value("Time", "last " + TimeLabels.of(draft.seconds())),
+                Lore.value("Radius", draft.radiusLabel()),
                 Lore.value("What", RollbackScope.of(draft.getScope()).getLabel()),
                 Lore.value("Player", target)
         );

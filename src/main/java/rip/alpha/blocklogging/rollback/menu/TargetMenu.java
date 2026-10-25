@@ -7,6 +7,7 @@ import rip.alpha.blocklogging.common.text.Chat;
 import rip.alpha.blocklogging.rollback.menu.button.TargetChoiceButton;
 import rip.alpha.blocklogging.rollback.state.RollbackDraft;
 import rip.alpha.libraries.menu.Menu;
+import rip.alpha.libraries.menu.button.BackButton;
 import rip.alpha.libraries.menu.button.Button;
 import rip.alpha.libraries.menu.page.PagedMenu;
 
@@ -35,5 +36,10 @@ public final class TargetMenu extends PagedMenu {
             buttons.put(buttons.size(), new TargetChoiceButton(this.parent, this.draft, online.getName()));
 
         return buttons;
+    }
+
+    @Override
+    public Map<Integer, Button> globalButtons(Player player) {
+        return Map.of(4, new BackButton(this.parent));
     }
 }
