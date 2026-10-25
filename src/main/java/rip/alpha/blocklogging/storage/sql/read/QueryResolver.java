@@ -5,7 +5,6 @@ import rip.alpha.blocklogging.query.exception.QueryException;
 import rip.alpha.blocklogging.query.model.Query;
 import rip.alpha.blocklogging.query.model.ResolvedQuery;
 import rip.alpha.blocklogging.storage.sql.SqlStore;
-import rip.alpha.blocklogging.storage.sql.state.WorldIds;
 
 import java.sql.Connection;
 import java.sql.SQLException;
