@@ -5,6 +5,7 @@ import rip.alpha.blocklogging.admin.model.HelpEntry;
 import rip.alpha.blocklogging.common.permission.Permissions;
 import rip.alpha.blocklogging.common.text.Chat;
 import rip.alpha.libraries.command.annotation.Command;
+import rip.alpha.libraries.command.execute.CommandMessages;
 import rip.alpha.libraries.text.message.RichMessage;
 
 import java.util.List;
@@ -31,13 +32,17 @@ public final class HelpCommand {
             description = "Show the BlockLogging commands"
     )
     public void help(CommandSender sender) {
+        List<HelpEntry> allowed = ENTRIES.stream().filter(entry -> sender.hasPermission(entry.permission())).toList();
+
+        if (allowed.isEmpty()) {
+            sender.sendMessage(CommandMessages.NO_PERMISSION);
+            return;
+        }
+
         sender.sendMessage(Chat.header("Commands"));
 
-        for (HelpEntry entry : ENTRIES) {
-
-            if (sender.hasPermission(entry.permission()))
-                line(entry).send(sender);
-        }
+        for (HelpEntry entry : allowed)
+            line(entry).send(sender);
     }
 
     private RichMessage line(HelpEntry entry) {
