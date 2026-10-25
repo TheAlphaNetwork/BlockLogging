@@ -5,7 +5,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import rip.alpha.blocklogging.record.RecordService;
-import rip.alpha.blocklogging.record.state.OpenContainers;
+import rip.alpha.blocklogging.record.capture.ContainerTracker;
 import rip.alpha.blocklogging.record.state.PositionOwners;
 
 import java.util.List;
@@ -30,7 +30,7 @@ public class RecordListeners {
                 new NatureListener(records),
                 new HangingListener(records),
                 new ItemFrameListener(records),
-                new ContainerListener(records, new OpenContainers()),
+                new ContainerListener(records, new ContainerTracker(plugin, records)),
                 new ItemListener(records),
                 new SignListener(records),
                 new KillListener(records),
