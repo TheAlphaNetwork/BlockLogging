@@ -24,7 +24,7 @@ public final class SqlWriter {
         try {
             return SqlWrites.write(this.session, writes);
 
-        } catch (SQLException | IOException exception) {
+        } catch (SQLException | IOException | RuntimeException exception) {
             this.session.reset();
 
             throw new StoreException("Could not write a batch of logs", exception);
@@ -36,7 +36,7 @@ public final class SqlWriter {
         try {
             return PurgeWriter.purge(this.session, request);
 
-        } catch (SQLException exception) {
+        } catch (SQLException | RuntimeException exception) {
             this.session.reset();
 
             throw new StoreException("Could not purge logs", exception);
