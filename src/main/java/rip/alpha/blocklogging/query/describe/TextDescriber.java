@@ -8,7 +8,7 @@ import rip.alpha.blocklogging.query.model.LookupRow;
 final class TextDescriber implements RowDescriber {
 
     private static final String LINE_BREAK = "\n";
-    private static final String SEPARATOR = " | ";
+    private static final String SEPARATOR = " / ";
 
     private final String verb;
 
@@ -16,6 +16,6 @@ final class TextDescriber implements RowDescriber {
     public String describe(LookupRow row) {
         String text = row.text() == null ? "" : row.text().replace(LINE_BREAK, SEPARATOR);
 
-        return Chat.TEXT + this.verb + " " + Chat.MUTED + text;
+        return Chat.MUTED + this.verb + " " + Chat.TEXT + text;
     }
 }

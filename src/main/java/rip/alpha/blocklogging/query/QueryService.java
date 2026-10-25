@@ -8,14 +8,17 @@ import org.bukkit.plugin.Plugin;
 import rip.alpha.blocklogging.common.text.Chat;
 import rip.alpha.blocklogging.config.ConfigStore;
 import rip.alpha.blocklogging.query.exception.QueryException;
+import rip.alpha.blocklogging.query.filter.StaffCommands;
 import rip.alpha.blocklogging.query.menu.LookupMenu;
 import rip.alpha.blocklogging.query.model.LookupPage;
 import rip.alpha.blocklogging.query.model.LookupView;
+import rip.alpha.blocklogging.query.model.NameColors;
 import rip.alpha.blocklogging.query.model.PageRequest;
 import rip.alpha.blocklogging.query.model.Query;
 import rip.alpha.blocklogging.query.model.ResolvedQuery;
 import rip.alpha.blocklogging.query.model.SavedLookup;
 import rip.alpha.blocklogging.query.render.LookupRenderer;
+import rip.alpha.blocklogging.query.render.NameColoring;
 import rip.alpha.blocklogging.query.state.LastLookups;
 import rip.alpha.blocklogging.storage.exception.StoreException;
 import rip.alpha.blocklogging.storage.sql.read.LookupSql;
@@ -25,7 +28,7 @@ import rip.alpha.libraries.task.Tasks;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -82,19 +85,21 @@ public final class QueryService {
     public void menu(Player player, SavedLookup lookup, int page) {
         PageRequest request = new PageRequest(Math.max(1, page), LookupMenu.ROWS_PER_PAGE);
 
-        Tasks.async(() -> fetch(player, lookup, request, result -> new LookupMenu(this, lookup, result).open(player)));
+        Tasks.async(() -> fetch(player, lookup, request, (result, _) -> new LookupMenu(this, lookup, result).open(player)));
     }
 
     private void run(CommandSender sender, SavedLookup lookup, PageRequest request) {
-        fetch(sender, lookup, request, page -> LookupRenderer.render(sender, page, lookup.view()));
+        fetch(sender, lookup, request, (page, colors) -> LookupRenderer.render(sender, page, lookup.view(), colors));
     }
 
-    private void fetch(CommandSender sender, SavedLookup lookup, PageRequest request, Consumer<LookupPage> show) {
+    private void fetch(CommandSender sender, SavedLookup lookup, PageRequest request, BiConsumer<LookupPage, NameColors> show) {
 
         try {
-            LookupPage page = this.store.lookup(lookup.query(), request);
+            LookupPage page = StaffCommands.redact(sender, this.store.lookup(lookup.query(), request));
 
-            Tasks.sync(this.plugin, () -> show.accept(page));
+            NameColors colors = NameColoring.of(page);
+
+            Tasks.sync(this.plugin, () -> show.accept(page, colors));
 
         } catch (QueryException exception) {
             Tasks.sync(this.plugin, () -> Chat.error(sender, exception.getMessage()));

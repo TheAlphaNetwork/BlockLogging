@@ -13,8 +13,8 @@ final class AmountDescriber implements RowDescriber {
 
     @Override
     public String describe(LookupRow row) {
-        String verb = row.action() == 1 ? this.positive : this.negative;
+        String verb = row.action() == 1 ? Chat.GOOD + this.positive : Chat.BAD + this.negative;
 
-        return "%s%s %sx%d %s".formatted(Chat.TEXT, verb, Chat.ACCENT, row.amount(), TypeLabels.block(row.type(), row.data()));
+        return "%s %s%dx %s".formatted(verb, Chat.ACCENT, row.amount(), TypeLabels.block(row.type(), row.data()));
     }
 }

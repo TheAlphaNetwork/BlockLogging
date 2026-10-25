@@ -23,6 +23,7 @@ public class RowDocuments {
                 .table(table)
                 .time(document.getLong(MongoFields.TIME))
                 .user(document.getString(MongoFields.USER))
+                .uuid(uuid(document.getString(MongoFields.UUID)))
                 .position(position(document))
                 .type(integer(document, MongoFields.TYPE))
                 .data(integer(document, MongoFields.DATA))

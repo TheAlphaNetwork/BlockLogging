@@ -4,7 +4,7 @@ import lombok.Builder;
 
 import java.util.List;
 
-@Builder
+@Builder(toBuilder = true)
 public record LookupPage(List<LookupRow> rows, int total, int page, int pageSize) {
 
     public int pages() {

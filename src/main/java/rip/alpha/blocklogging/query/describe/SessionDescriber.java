@@ -7,6 +7,6 @@ final class SessionDescriber implements RowDescriber {
 
     @Override
     public String describe(LookupRow row) {
-        return Chat.TEXT + (row.action() == 1 ? "logged in" : "logged out");
+        return row.action() == 1 ? Chat.GOOD + "joined" : Chat.BAD + "left";
     }
 }

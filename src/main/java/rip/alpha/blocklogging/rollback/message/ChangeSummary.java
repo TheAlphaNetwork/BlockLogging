@@ -17,12 +17,12 @@ class ChangeSummary {
         add(joiner, items, "player items");
         add(joiner, entities, "entities");
 
-        return joiner.length() == 0 ? Chat.TEXT + "nothing" : joiner.toString();
+        return joiner.length() == 0 ? Chat.MUTED + "nothing" : joiner.toString();
     }
 
     private void add(StringJoiner joiner, long amount, String label) {
 
         if (amount > 0)
-            joiner.add(Chat.TEXT + amount + Chat.MUTED + " " + label);
+            joiner.add("%s%,d %s%s".formatted(Chat.ACCENT, amount, Chat.MUTED, label));
     }
 }

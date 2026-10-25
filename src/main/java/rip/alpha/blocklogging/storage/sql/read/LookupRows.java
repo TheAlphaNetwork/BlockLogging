@@ -1,12 +1,14 @@
 package rip.alpha.blocklogging.storage.sql.read;
 
 import lombok.experimental.UtilityClass;
+import org.jetbrains.annotations.Nullable;
 import rip.alpha.blocklogging.common.model.BlockPosition;
 import rip.alpha.blocklogging.query.model.LookupRow;
 import rip.alpha.blocklogging.storage.type.LogTable;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.UUID;
 
 @UtilityClass
 class LookupRows {
@@ -25,6 +27,7 @@ class LookupRows {
                 .table(LogTable.values()[result.getInt("log")])
                 .time(result.getLong("time"))
                 .user(result.getString("user_name"))
+                .uuid(uuid(result.getString("user_uuid")))
                 .position(position)
                 .type(result.getInt("type"))
                 .data(result.getInt("data"))
@@ -33,5 +36,10 @@ class LookupRows {
                 .rolledBack(result.getInt("rolled_back") == 1)
                 .text(result.getString("text"))
                 .build();
+    }
+
+    @Nullable
+    private UUID uuid(@Nullable String value) {
+        return value == null ? null : UUID.fromString(value);
     }
 }

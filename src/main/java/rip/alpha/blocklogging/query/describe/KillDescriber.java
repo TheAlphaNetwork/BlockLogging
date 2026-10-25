@@ -8,6 +8,6 @@ final class KillDescriber implements RowDescriber {
 
     @Override
     public String describe(LookupRow row) {
-        return Chat.TEXT + "killed " + Chat.ACCENT + TypeLabels.entity(row.type());
+        return Chat.BAD + "killed " + Chat.ACCENT + TypeLabels.entity(row.type());
     }
 }

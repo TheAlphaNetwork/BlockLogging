@@ -3,6 +3,7 @@ package rip.alpha.blocklogging.rollback.message;
 import lombok.experimental.UtilityClass;
 import org.bukkit.command.CommandSender;
 import rip.alpha.blocklogging.common.text.Chat;
+import rip.alpha.blocklogging.common.text.DurationLabel;
 import rip.alpha.blocklogging.query.type.QueryFlag;
 import rip.alpha.blocklogging.rollback.model.ApplyResult;
 import rip.alpha.blocklogging.rollback.model.BlockTarget;
@@ -29,38 +30,42 @@ public class RollbackMessages {
                 plan.count(EntityRespawn.class) + plan.count(EntityRemoval.class)
         );
 
-        Chat.info(sender, "%s would touch %s %s(%d logs).".formatted(operation.kind().getTitle(), summary, Chat.MUTED, plan.matched()));
+        String title = operation.kind().getTitle();
+
+        String logs = "%,d logs".formatted(plan.matched());
+
+        Chat.info(sender, "%s%s %swould change %s %s(%s)".formatted(Chat.TEXT, title, Chat.MUTED, summary, Chat.DARK, logs));
     }
 
     public void preview(CommandSender sender, RollbackPlan plan) {
-        Chat.info(sender, "Previewing %s%d%s block changes, only you can see them.".formatted(Chat.TEXT, plan.blocks().size(), Chat.MUTED));
+        int blocks = plan.blocks().size();
+
+        Chat.info(sender, "Previewing %s%,d %sblock changes, only you can see them.".formatted(Chat.ACCENT, blocks, Chat.MUTED));
 
         RichMessage.of(Chat.PREFIX)
-                .then(Chat.ACCENT + "[Apply]").run("/bl apply").hover(Chat.MUTED + "Apply this change for real")
+                .then(Chat.button(Chat.GOOD, "Apply")).run("/bl apply").hover(Chat.MUTED + "Apply this change for real")
                 .then(" ")
-                .then(Chat.ACCENT + "[Cancel]").run("/bl cancel").hover(Chat.MUTED + "Discard the preview")
+                .then(Chat.button(Chat.BAD, "Cancel")).run("/bl cancel").hover(Chat.MUTED + "Discard the preview")
                 .send(sender);
     }
 
     public void started(CommandSender sender, Operation operation) {
 
         if (!operation.query().has(QueryFlag.SILENT))
-            Chat.info(sender, "%s started, searching the logs...".formatted(operation.kind().getTitle()));
+            Chat.info(sender, "%s%s %sstarted, searching the logs...".formatted(Chat.TEXT, operation.kind().getTitle(), Chat.MUTED));
     }
 
     public void finished(CommandSender sender, Operation operation, ApplyResult result) {
         String summary = ChangeSummary.of(result.blocks(), result.hangings(), result.containers(), result.items(), result.entities());
-        String time = "%d.%ds".formatted(result.millis() / 1000, result.millis() % 1000 / 100);
+        String title = operation.kind().getTitle();
+        String time = DurationLabel.of(result.millis());
+        String text = "%s%s %sdone in %s%s %s· %s ".formatted(Chat.TEXT, title, Chat.MUTED, Chat.ACCENT, time, Chat.DARK, summary);
 
-        Chat.info(sender, "%s finished in %s%s%s: %s.".formatted(operation.kind().getTitle(), Chat.TEXT, time, Chat.MUTED, summary));
+        RichMessage.of(Chat.PREFIX + text)
+                .then(Chat.button(Chat.BAD, "Undo")).run("/bl undo").hover(Chat.MUTED + "Revert this " + title.toLowerCase(Locale.ROOT))
+                .send(sender);
 
         if (operation.query().has(QueryFlag.VERBOSE))
-            Chat.info(sender, "%d changes were skipped because the world already matched.".formatted(result.skipped()));
-
-        String hover = Chat.MUTED + "Revert this " + operation.kind().getTitle().toLowerCase(Locale.ROOT);
-
-        RichMessage.of(Chat.PREFIX + "Made a mistake? ")
-                .then(Chat.ACCENT + "[Undo]").run("/bl undo").hover(hover)
-                .send(sender);
+            Chat.info(sender, "%,d changes were skipped because the world already matched.".formatted(result.skipped()));
     }
 }

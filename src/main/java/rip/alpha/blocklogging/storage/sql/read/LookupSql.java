@@ -21,7 +21,8 @@ public final class LookupSql {
     private static final String UNION = " UNION ALL ";
     private static final String MEMBER = "SELECT * FROM (%s ORDER BY time DESC, id DESC LIMIT %d) m%d";
     private static final String SINGLE = "%s ORDER BY time DESC, id DESC LIMIT %d";
-    private static final String JOINED = "SELECT r.*, u.name AS user_name, w.name AS world_name FROM (%s) r JOIN %s u ON u.id = r.user ";
+    private static final String COLUMNS = "r.*, u.name AS user_name, u.uuid AS user_uuid, w.name AS world_name";
+    private static final String JOINED = "SELECT " + COLUMNS + " FROM (%s) r JOIN %s u ON u.id = r.user ";
     private static final String ORDERED = "LEFT JOIN %s w ON w.id = r.world ORDER BY r.time DESC, r.id DESC LIMIT %d";
 
     private final Connection connection;

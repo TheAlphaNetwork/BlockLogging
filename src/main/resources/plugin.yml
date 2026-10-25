@@ -6,3 +6,4 @@ depend:
   - Libraries
 softdepend:
   - WorldEdit
+  - Core

@@ -46,6 +46,10 @@ public record BlockPosition(String world, int x, int y, int z) {
         return toBuilder().x(this.x + dx).y(this.y + dy).z(this.z + dz).build();
     }
 
+    public String pretty() {
+        return "%d, %d, %d".formatted(this.x, this.y, this.z);
+    }
+
     public String describe() {
         return "%d/%d/%d/%s".formatted(this.x, this.y, this.z, this.world);
     }

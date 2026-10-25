@@ -11,20 +11,19 @@ public class PageFooter {
     private final String COMMAND = "/bl lookup ";
 
     public RichMessage of(LookupPage page) {
-        RichMessage footer = RichMessage.of(Chat.MUTED + "Page " + Chat.TEXT + page.page() + Chat.MUTED + "/" + Chat.TEXT + page.pages());
+        String results = page.total() == 1 ? "1 result" : "%,d results".formatted(page.total());
+        String status = "%s Page %s%d%s of %s%d".formatted(Chat.MUTED, Chat.TEXT, page.page(), Chat.MUTED, Chat.TEXT, page.pages());
 
-        footer.then(Chat.MUTED + " (" + page.total() + " results)  ");
+        RichMessage footer = RichMessage.of(status);
+
+        footer.then(Chat.DARK + " · " + Chat.MUTED + results + "  ");
 
         if (page.page() > 1)
-            footer.then(Chat.ACCENT + "« Prev ").run(COMMAND + (page.page() - 1)).hover(Chat.MUTED + "Previous page");
+            footer.then(Chat.button(Chat.ACCENT, "« Back")).run(COMMAND + (page.page() - 1)).hover(Chat.MUTED + "Previous page").then(" ");
 
         if (page.page() < page.pages())
-            footer.then(Chat.ACCENT + "Next »").run(COMMAND + (page.page() + 1)).hover(Chat.MUTED + "Next page");
+            footer.then(Chat.button(Chat.ACCENT, "Next »")).run(COMMAND + (page.page() + 1)).hover(Chat.MUTED + "Next page").then(" ");
 
-        String label = Chat.DARK + "  [" + Chat.ACCENT + "GUI" + Chat.DARK + "]";
-
-        footer.then(label).run("/bl gui").hover(Chat.MUTED + "Open these results in a menu");
-
-        return footer;
+        return footer.then(Chat.button(Chat.ACCENT, "Menu")).run("/bl gui").hover(Chat.MUTED + "Open these results in a menu");
     }
 }
