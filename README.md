@@ -114,7 +114,7 @@ BlockLogging/
 | `/bl near [radius]` | What changed around you |
 | `/bl rollback <filters>` or `/bl rb` | Undo matching changes |
 | `/bl restore <filters>` or `/bl rs` | Put rolled back changes back |
-| `/bl undo` | Revert your last rollback or restore |
+| `/bl undo [player]` | Revert your last rollback or restore. Admins can revert someone else's |
 | `/bl apply` / `/bl cancel` | Confirm or throw away a `#preview` |
 | `/bl purge t:<time> [r:#world]` | Delete old logs |
 | `/bl status`, `/bl consumer`, `/bl reload` | Writer stats, pause the writer, reload the config |
@@ -130,7 +130,7 @@ BlockLogging/
 | `i:` / `e:` | `i:diamond_block` / `e:stone,Notch` | Only include, or leave out, these blocks, items, entities or players |
 | flags | `#preview`, `#count`, `#verbose`, `#silent` | Change how a rollback runs |
 
-A rollback needs a `t:`. If you leave out `r:` it uses 10 blocks around you.
+A rollback needs a `t:`. If you leave out `r:` it uses 10 blocks around you. `r:#global` and `r:#<world>` rollbacks need `blocklogging.rollback.global`, so someone with the normal rollback permission can't wipe the whole map.
 
 ### Permissions
 
@@ -139,7 +139,9 @@ A rollback needs a `t:`. If you leave out `r:` it uses 10 blocks around you.
 | `blocklogging.inspect` | Use the inspector |
 | `blocklogging.lookup` | Look things up, and use `near`, `gui` and `menu` |
 | `blocklogging.lookup.chat` | Look up chat and commands |
-| `blocklogging.rollback` | Roll back, undo and preview |
+| `blocklogging.rollback` | Roll back, undo and preview, up to the max radius |
+| `blocklogging.rollback.global` | Roll back a whole world, the whole server, or a WorldEdit selection bigger than the max radius |
+| `blocklogging.undo.others` | Undo another player's last rollback or restore with `/bl undo <player>` |
 | `blocklogging.restore` | Restore |
 | `blocklogging.purge` | Purge old logs |
 | `blocklogging.status`, `.consumer`, `.reload`, `.teleport` | The matching admin command |
