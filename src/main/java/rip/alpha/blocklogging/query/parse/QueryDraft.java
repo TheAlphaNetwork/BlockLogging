@@ -40,20 +40,20 @@ final class QueryDraft {
     private Radius radius;
 
     Query build(Radius fallback) {
-        return new Query(
-                List.copyOf(this.users),
-                List.copyOf(this.excludedUsers),
+        return Query.builder()
+                .users(List.copyOf(this.users))
+                .excludedUsers(List.copyOf(this.excludedUsers))
 
-                this.since,
-                this.until,
-                this.radius == null ? fallback : this.radius,
+                .since(this.since)
+                .until(this.until)
+                .radius(this.radius == null ? fallback : this.radius)
 
-                Set.copyOf(this.actions),
+                .actions(Set.copyOf(this.actions))
 
-                new TypeFilter(Set.copyOf(this.includeBlocks), Set.copyOf(this.includeEntities)),
-                new TypeFilter(Set.copyOf(this.excludeBlocks), Set.copyOf(this.excludeEntities)),
+                .include(new TypeFilter(Set.copyOf(this.includeBlocks), Set.copyOf(this.includeEntities)))
+                .exclude(new TypeFilter(Set.copyOf(this.excludeBlocks), Set.copyOf(this.excludeEntities)))
 
-                Set.copyOf(this.flags)
-        );
+                .flags(Set.copyOf(this.flags))
+                .build();
     }
 }

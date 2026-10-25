@@ -5,6 +5,12 @@ import org.bukkit.command.CommandSender;
 import rip.alpha.blocklogging.common.text.Chat;
 import rip.alpha.blocklogging.query.type.QueryFlag;
 import rip.alpha.blocklogging.rollback.model.ApplyResult;
+import rip.alpha.blocklogging.rollback.model.BlockTarget;
+import rip.alpha.blocklogging.rollback.model.ContainerChange;
+import rip.alpha.blocklogging.rollback.model.EntityRemoval;
+import rip.alpha.blocklogging.rollback.model.EntityRespawn;
+import rip.alpha.blocklogging.rollback.model.HangingChange;
+import rip.alpha.blocklogging.rollback.model.ItemChange;
 import rip.alpha.blocklogging.rollback.model.Operation;
 import rip.alpha.blocklogging.rollback.model.RollbackPlan;
 import rip.alpha.libraries.text.message.RichMessage;
@@ -15,13 +21,15 @@ import java.util.Locale;
 public class RollbackMessages {
 
     public void count(CommandSender sender, Operation operation, RollbackPlan plan) {
-        Chat.info(sender, "%s would change %s%d%s blocks, %s%d%s container stacks and respawn %s%d%s entities (%d logs).".formatted(
-                operation.kind().getTitle(),
-                Chat.TEXT, plan.blocks().size(), Chat.MUTED,
-                Chat.TEXT, plan.containers().size(), Chat.MUTED,
-                Chat.TEXT, plan.entities().size(), Chat.MUTED,
-                plan.matched()
-        ));
+        String summary = ChangeSummary.of(
+                plan.count(BlockTarget.class),
+                plan.count(HangingChange.class),
+                plan.count(ContainerChange.class),
+                plan.count(ItemChange.class),
+                plan.count(EntityRespawn.class) + plan.count(EntityRemoval.class)
+        );
+
+        Chat.info(sender, "%s would touch %s %s(%d logs).".formatted(operation.kind().getTitle(), summary, Chat.MUTED, plan.matched()));
     }
 
     public void preview(CommandSender sender, RollbackPlan plan) {
@@ -34,14 +42,17 @@ public class RollbackMessages {
                 .send(sender);
     }
 
+    public void started(CommandSender sender, Operation operation) {
+
+        if (!operation.query().has(QueryFlag.SILENT))
+            Chat.info(sender, "%s started, searching the logs...".formatted(operation.kind().getTitle()));
+    }
+
     public void finished(CommandSender sender, Operation operation, ApplyResult result) {
-        Chat.info(sender, "%s finished in %s%d.%ds%s: %s%d%s blocks, %s%d%s container stacks, %s%d%s entities.".formatted(
-                operation.kind().getTitle(),
-                Chat.TEXT, result.millis() / 1000, result.millis() % 1000 / 100, Chat.MUTED,
-                Chat.TEXT, result.blocks(), Chat.MUTED,
-                Chat.TEXT, result.containers(), Chat.MUTED,
-                Chat.TEXT, result.entities(), Chat.MUTED
-        ));
+        String summary = ChangeSummary.of(result.blocks(), result.hangings(), result.containers(), result.items(), result.entities());
+        String time = "%d.%ds".formatted(result.millis() / 1000, result.millis() % 1000 / 100);
+
+        Chat.info(sender, "%s finished in %s%s%s: %s.".formatted(operation.kind().getTitle(), Chat.TEXT, time, Chat.MUTED, summary));
 
         if (operation.query().has(QueryFlag.VERBOSE))
             Chat.info(sender, "%d changes were skipped because the world already matched.".formatted(result.skipped()));

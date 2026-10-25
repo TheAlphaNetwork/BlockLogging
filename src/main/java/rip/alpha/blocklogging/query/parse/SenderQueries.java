@@ -16,7 +16,7 @@ import java.util.Locale;
 public class SenderQueries {
 
     public Query parse(CommandSender sender, QueryInput input, int maxRadius, Radius fallback) {
-        return QueryParser.parse(input, new ParseContext(location(sender), maxRadius), fallback);
+        return QueryParser.parse(input, new ParseContext(sender instanceof Player player ? player : null, maxRadius), fallback);
     }
 
     @Nullable

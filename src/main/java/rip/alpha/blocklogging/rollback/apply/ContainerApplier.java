@@ -13,8 +13,11 @@ public class ContainerApplier {
     public boolean apply(ContainerChange change) {
         Block block = change.position().block();
 
-        if (block == null || !(block.getState() instanceof InventoryHolder holder))
+        if (block == null)
             return false;
+
+        if (!(block.getState() instanceof InventoryHolder holder))
+            return FrameContents.apply(change);
 
         Inventory inventory = holder.getInventory();
 

@@ -43,7 +43,12 @@ class RollbackQueries {
         if (location == null)
             return new GlobalRadius();
 
-        return new AreaRadius(location.getWorld().getName(), location.getBlockX(), location.getBlockZ(), radius);
+        return AreaRadius.builder()
+                .world(location.getWorld().getName())
+                .x(location.getBlockX())
+                .z(location.getBlockZ())
+                .size(radius)
+                .build();
     }
 
     private Set<Action> reversible(Set<Action> actions) {

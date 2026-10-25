@@ -1,44 +1,30 @@
 package rip.alpha.blocklogging.rollback;
 
-import lombok.RequiredArgsConstructor;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import rip.alpha.blocklogging.common.text.Chat;
 import rip.alpha.blocklogging.config.ConfigStore;
-import rip.alpha.blocklogging.query.exception.QueryException;
-import rip.alpha.blocklogging.query.model.Query;
-import rip.alpha.blocklogging.query.model.ResolvedQuery;
-import rip.alpha.blocklogging.query.sql.QueryResolver;
-import rip.alpha.blocklogging.query.type.QueryFlag;
 import rip.alpha.blocklogging.record.RecordService;
-import rip.alpha.blocklogging.rollback.message.RollbackMessages;
-import rip.alpha.blocklogging.rollback.model.ApplyJob;
 import rip.alpha.blocklogging.rollback.model.Operation;
-import rip.alpha.blocklogging.rollback.model.RollbackPlan;
-import rip.alpha.blocklogging.rollback.plan.PlanBuilder;
+import rip.alpha.blocklogging.rollback.model.OperationRecord;
+import rip.alpha.blocklogging.rollback.model.RunnerContext;
 import rip.alpha.blocklogging.rollback.state.LastOperations;
-import rip.alpha.blocklogging.rollback.task.ApplyTask;
-import rip.alpha.blocklogging.rollback.type.RollbackKind;
-import rip.alpha.blocklogging.storage.StorageService;
+import rip.alpha.blocklogging.rollback.task.RollbackRunner;
+import rip.alpha.blocklogging.rollback.type.OperationState;
+import rip.alpha.blocklogging.storage.exception.StoreException;
+import rip.alpha.blocklogging.storage.store.LogStore;
 import rip.alpha.libraries.task.Tasks;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@RequiredArgsConstructor
 public final class RollbackService {
 
     private final Plugin plugin;
 
-    private final StorageService storage;
-
-    private final RecordService records;
-
-    private final ConfigStore configs;
+    private final LogStore store;
 
     private final Logger logger;
 
@@ -46,25 +32,50 @@ public final class RollbackService {
 
     private final PreviewService previews = new PreviewService(this);
 
-    private final AtomicInteger active = new AtomicInteger();
+    private final RollbackRunner runner;
+
+    public RollbackService(Plugin plugin, LogStore store, RecordService records, ConfigStore configs, Logger logger) {
+        this.plugin = plugin;
+        this.store = store;
+        this.logger = logger;
+        this.runner = new RollbackRunner(RunnerContext.builder()
+                .plugin(plugin)
+                .store(store)
+                .records(records)
+                .configs(configs)
+                .logger(logger)
+                .operations(this.operations)
+                .previews(this.previews::show)
+                .build());
+    }
 
     public void run(CommandSender sender, Operation operation) {
-
-        if (!operation.query().has(QueryFlag.SILENT))
-            Chat.info(sender, "%s started, searching the logs...".formatted(operation.kind().getTitle()));
-
-        Tasks.async(() -> plan(sender, operation));
+        this.runner.run(sender, sender.getName(), operation);
     }
 
     public void undo(CommandSender sender) {
-        Operation last = this.operations.last(sender);
+        Operation last = this.operations.last(sender.getName());
 
         if (last == null) {
             Chat.error(sender, "You have nothing to undo.");
             return;
         }
 
-        run(sender, new Operation(last.query(), last.kind().inverse()));
+        run(sender, last.inverse());
+    }
+
+    public void restore() {
+        Tasks.async(() -> {
+
+            try {
+                List<OperationRecord> records = this.store.operations();
+
+                Tasks.sync(this.plugin, () -> records.forEach(this::restore));
+
+            } catch (StoreException exception) {
+                this.logger.log(Level.WARNING, "Could not load previous rollbacks", exception);
+            }
+        });
     }
 
     public PreviewService previews() {
@@ -72,59 +83,17 @@ public final class RollbackService {
     }
 
     public int active() {
-        return this.active.get();
+        return this.runner.active();
     }
 
-    private void plan(CommandSender sender, Operation operation) {
+    private void restore(OperationRecord record) {
 
-        try (Connection connection = this.storage.connect()) {
-            ResolvedQuery resolved = QueryResolver.resolve(connection, this.storage, operation.query());
-
-            RollbackPlan plan = PlanBuilder.build(connection, this.storage, resolved, operation.kind());
-
-            Tasks.sync(this.plugin, () -> execute(sender, operation, plan));
-
-        } catch (QueryException exception) {
-            Tasks.sync(this.plugin, () -> Chat.error(sender, exception.getMessage()));
-        } catch (SQLException exception) {
-            this.logger.log(Level.WARNING, "Could not plan a " + operation.kind().getTitle(), exception);
-            Tasks.sync(this.plugin, () -> Chat.error(sender, "The %s failed, check the console.".formatted(operation.kind().getVerb())));
-        }
-    }
-
-    private void execute(CommandSender sender, Operation operation, RollbackPlan plan) {
-        Query query = operation.query();
-
-        if (plan.isEmpty()) {
-            Chat.info(sender, "No matching changes were found.");
+        if (record.state() == OperationState.DONE) {
+            this.operations.remember(record.sender(), record.operation());
             return;
         }
 
-        if (query.has(QueryFlag.COUNT)) {
-            RollbackMessages.count(sender, operation, plan);
-            return;
-        }
-
-        if (query.has(QueryFlag.PREVIEW) && sender instanceof Player player) {
-            this.previews.show(player, operation, plan);
-            return;
-        }
-
-        start(sender, operation, plan);
-    }
-
-    private void start(CommandSender sender, Operation operation, RollbackPlan plan) {
-        long budget = Math.max(1, this.configs.getConfig().getRollback().getMillisPerTick());
-
-        boolean silent = operation.query().has(QueryFlag.SILENT);
-        ApplyJob job = new ApplyJob(sender, operation.kind(), silent, budget, result -> {
-            this.active.decrementAndGet();
-            plan.flags().forEach(this.records::submit);
-            this.operations.remember(sender, operation);
-            RollbackMessages.finished(sender, operation, result);
-        });
-
-        this.active.incrementAndGet();
-        new ApplyTask(plan.changes(), job).runTaskTimer(this.plugin, 1L, 1L);
+        this.logger.info("Resuming an interrupted %s by %s".formatted(record.operation().kind().getVerb(), record.sender()));
+        this.runner.run(Bukkit.getConsoleSender(), record.sender(), record.operation());
     }
 }

@@ -4,3 +4,5 @@ main: rip.alpha.blocklogging.BlockLogging
 authors: [Alpha Development Team]
 depend:
   - Libraries
+softdepend:
+  - WorldEdit

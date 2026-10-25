@@ -21,6 +21,7 @@ public class PageFooter {
         if (page.page() < page.pages())
             footer.then(Chat.ACCENT + "Next »").run(COMMAND + (page.page() + 1)).hover(Chat.MUTED + "Next page");
 
+
         return footer;
     }
 }

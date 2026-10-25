@@ -14,14 +14,16 @@ import rip.alpha.blocklogging.query.model.Query;
 import rip.alpha.blocklogging.query.model.ResolvedQuery;
 import rip.alpha.blocklogging.query.model.SavedLookup;
 import rip.alpha.blocklogging.query.render.LookupRenderer;
-import rip.alpha.blocklogging.query.sql.LookupSql;
-import rip.alpha.blocklogging.query.sql.QueryResolver;
 import rip.alpha.blocklogging.query.state.LastLookups;
-import rip.alpha.blocklogging.storage.StorageService;
+import rip.alpha.blocklogging.storage.exception.StoreException;
+import rip.alpha.blocklogging.storage.sql.read.LookupSql;
+import rip.alpha.blocklogging.storage.sql.read.QueryResolver;
+import rip.alpha.blocklogging.storage.store.LogStore;
 import rip.alpha.libraries.task.Tasks;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -30,7 +32,7 @@ public final class QueryService {
 
     private final Plugin plugin;
 
-    private final StorageService storage;
+    private final LogStore store;
 
     private final ConfigStore configs;
 
@@ -58,17 +60,20 @@ public final class QueryService {
     }
 
     private void run(CommandSender sender, SavedLookup lookup, PageRequest request) {
+        fetch(sender, lookup, request, page -> LookupRenderer.render(sender, page, lookup.view()));
+    }
 
-        try (Connection connection = this.storage.connect()) {
-            ResolvedQuery resolved = QueryResolver.resolve(connection, this.storage, lookup.query());
+    private void fetch(CommandSender sender, SavedLookup lookup, PageRequest request, Consumer<LookupPage> show) {
 
-            LookupPage page = new LookupSql(connection, this.storage, resolved).page(request.page(), request.size());
-            Tasks.sync(this.plugin, () -> LookupRenderer.render(sender, page, lookup.view()));
+        try {
+            LookupPage page = this.store.lookup(lookup.query(), request);
+
+            Tasks.sync(this.plugin, () -> show.accept(page));
 
         } catch (QueryException exception) {
             Tasks.sync(this.plugin, () -> Chat.error(sender, exception.getMessage()));
 
-        } catch (SQLException exception) {
+        } catch (StoreException exception) {
             this.logger.log(Level.WARNING, "Lookup failed", exception);
             Tasks.sync(this.plugin, () -> Chat.error(sender, "The lookup failed, check the console."));
         }

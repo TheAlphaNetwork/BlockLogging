@@ -70,7 +70,7 @@ public final class RollbackCommand {
         }
 
         try {
-            this.rollbacks.run(sender, new Operation(RollbackQueries.parse(sender, input, this.configs.getConfig().getRollback()), kind));
+            this.rollbacks.run(sender, Operation.of(RollbackQueries.parse(sender, input, this.configs.getConfig().getRollback()), kind));
         } catch (QueryException exception) {
             Chat.error(sender, exception.getMessage());
         }

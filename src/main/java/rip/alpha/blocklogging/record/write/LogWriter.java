@@ -6,9 +6,9 @@ import rip.alpha.blocklogging.config.WriterConfig;
 import rip.alpha.blocklogging.record.model.PendingWrite;
 import rip.alpha.blocklogging.record.model.PurgeRequest;
 import rip.alpha.blocklogging.record.model.PurgeResult;
-import rip.alpha.blocklogging.storage.StorageService;
+import rip.alpha.blocklogging.storage.exception.StoreException;
+import rip.alpha.blocklogging.storage.store.LogStore;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
@@ -23,11 +23,11 @@ public final class LogWriter implements Runnable {
 
     private final BlockingQueue<PendingWrite> queue;
 
+    private final LogStore store;
+
     private final Supplier<WriterConfig> config;
 
     private final Logger logger;
-
-    private final WriterSession session;
 
     @Getter
     private final WriterStats stats = new WriterStats();
@@ -38,11 +38,11 @@ public final class LogWriter implements Runnable {
     @Setter
     private volatile boolean paused;
 
-    public LogWriter(BlockingQueue<PendingWrite> queue, StorageService storage, Supplier<WriterConfig> config, Logger logger) {
+    public LogWriter(BlockingQueue<PendingWrite> queue, LogStore store, Supplier<WriterConfig> config, Logger logger) {
         this.queue = queue;
+        this.store = store;
         this.config = config;
         this.logger = logger;
-        this.session = new WriterSession(storage, logger);
     }
 
     @Override
@@ -56,8 +56,6 @@ public final class LogWriter implements Runnable {
                 this.running = false;
             }
         }
-
-        this.session.close();
     }
 
     public void stop() {
@@ -81,54 +79,52 @@ public final class LogWriter implements Runnable {
 
         writes.add(first);
         this.queue.drainTo(writes, settings.getBatchSize() - 1);
-        write(new WriteBatch(writes), writes.size());
+        write(writes);
     }
 
-    private void write(WriteBatch batch, int size) {
-        boolean written = false;
+    private void write(List<PendingWrite> writes) {
+        List<PurgeRequest> purges = new ArrayList<>();
+        List<PendingWrite> logs = new ArrayList<>(writes.size());
 
-        for (int attempt = 1; attempt <= ATTEMPTS && !written; attempt++)
-            written = tryWrite(batch);
+        for (PendingWrite write : writes) {
 
-        if (!written)
-            this.stats.failed(size);
-
-        batch.getPurges().forEach(this::purge);
-    }
-
-    private boolean tryWrite(WriteBatch batch) {
-        long started = System.currentTimeMillis();
-
-        try {
-            WriteContext context = this.session.context();
-
-            context.getConnection().setAutoCommit(false);
-
-            int rows = batch.insert(context);
-
-            RolledBackWriter.apply(context, batch.getUpdates());
-            context.getConnection().commit();
-            context.getConnection().setAutoCommit(true);
-
-            this.stats.batch(rows, System.currentTimeMillis() - started);
-            return true;
-
-        } catch (Exception exception) {
-            this.logger.log(Level.WARNING, "Could not write a batch of logs", exception);
-            this.session.reset();
-
-            return false;
+            if (write instanceof PurgeRequest purge)
+                purges.add(purge);
+            else
+                logs.add(write);
         }
+
+        if (!logs.isEmpty() && !tryWrite(logs))
+            this.stats.failed(logs.size());
+
+        purges.forEach(this::purge);
+    }
+
+    private boolean tryWrite(List<PendingWrite> writes) {
+        StoreException last = null;
+
+        for (int attempt = 1; attempt <= ATTEMPTS; attempt++) {
+            long started = System.currentTimeMillis();
+
+            try {
+                this.stats.batch(this.store.write(writes), System.currentTimeMillis() - started);
+                return true;
+
+            } catch (StoreException exception) {
+                last = exception;
+            }
+        }
+
+        this.logger.log(Level.WARNING, "Could not write a batch of logs", last);
+        return false;
     }
 
     private void purge(PurgeRequest request) {
 
         try {
-            request.callback().accept(PurgeWriter.purge(this.session.context(), request));
-        } catch (SQLException exception) {
+            request.callback().accept(this.store.purge(request));
+        } catch (StoreException exception) {
             this.logger.log(Level.WARNING, "Could not purge logs", exception);
-            this.session.reset();
-
             request.callback().accept(new PurgeResult(0, 0L, true));
         }
     }

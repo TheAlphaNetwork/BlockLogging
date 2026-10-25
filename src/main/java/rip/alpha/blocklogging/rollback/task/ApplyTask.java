@@ -2,15 +2,9 @@ package rip.alpha.blocklogging.rollback.task;
 
 import org.bukkit.scheduler.BukkitRunnable;
 import rip.alpha.blocklogging.common.text.Chat;
-import rip.alpha.blocklogging.rollback.apply.BlockApplier;
-import rip.alpha.blocklogging.rollback.apply.ContainerApplier;
-import rip.alpha.blocklogging.rollback.apply.EntityApplier;
 import rip.alpha.blocklogging.rollback.model.ApplyJob;
-import rip.alpha.blocklogging.rollback.model.ApplyResult;
-import rip.alpha.blocklogging.rollback.model.BlockTarget;
 import rip.alpha.blocklogging.rollback.model.Change;
-import rip.alpha.blocklogging.rollback.model.ContainerChange;
-import rip.alpha.blocklogging.rollback.model.EntityRespawn;
+import rip.alpha.blocklogging.rollback.type.RollbackKind;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -27,6 +21,10 @@ public final class ApplyTask extends BukkitRunnable {
 
     private final ApplyCounter counter = new ApplyCounter();
 
+    private final ChangeApplier applier;
+
+    private final ProcessedChanges processed;
+
     private final int total;
 
     private final long started = System.currentTimeMillis();
@@ -36,14 +34,22 @@ public final class ApplyTask extends BukkitRunnable {
         this.changes = new ArrayDeque<>(changes);
         this.job = job;
         this.total = changes.size();
+        this.applier = new ChangeApplier(job.sink());
+        this.processed = new ProcessedChanges(job.sink(), job.kind() == RollbackKind.ROLLBACK);
     }
 
     @Override
     public void run() {
         long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(this.job.budgetMillis());
 
-        while (!this.changes.isEmpty() && System.nanoTime() < deadline)
-            apply(this.changes.pollFirst());
+        while (!this.changes.isEmpty() && System.nanoTime() < deadline) {
+            Change change = this.changes.pollFirst();
+
+            this.counter.count(change, this.applier.apply(change));
+            this.processed.add(change);
+        }
+
+        this.processed.flush();
 
         if (this.changes.isEmpty()) {
             cancel();
@@ -55,22 +61,6 @@ public final class ApplyTask extends BukkitRunnable {
         progress();
     }
 
-    private void apply(Change change) {
-
-        try {
-            boolean applied = switch (change) {
-                case BlockTarget target -> BlockApplier.apply(target);
-                case ContainerChange container -> ContainerApplier.apply(container);
-                case EntityRespawn respawn -> EntityApplier.apply(respawn);
-            };
-
-            this.counter.count(change, applied);
-
-        } catch (RuntimeException _) {
-            this.counter.count(change, false);
-        }
-    }
-
     private void progress() {
         long now = System.currentTimeMillis();
 
@@ -80,6 +70,7 @@ public final class ApplyTask extends BukkitRunnable {
         int done = this.total - this.changes.size();
 
         this.lastProgress = now;
+
         String title = this.job.kind().getTitle();
 
         Chat.info(this.job.sender(), "%s %d%% done (%d/%d).".formatted(title, done * 100 / this.total, done, this.total));

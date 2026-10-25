@@ -35,7 +35,7 @@ public final class AdminCommand {
 
         sender.sendMessage(Chat.header("Status"));
         line(sender, "Version", this.plugin.getDescription().getVersion());
-        line(sender, "Database", this.storage.getDialect().name());
+        line(sender, "Database", this.storage.name());
         line(sender, "Queued", String.valueOf(this.records.queued()));
         line(sender, "Written", "%d (last batch %dms)".formatted(stats.written(), stats.lastBatchMillis()));
         line(sender, "Failed / dropped", "%d / %d".formatted(stats.failedRows(), stats.droppedRows()));

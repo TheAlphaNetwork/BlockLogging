@@ -9,8 +9,10 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockMultiPlaceEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import rip.alpha.blocklogging.common.model.Actor;
+import rip.alpha.blocklogging.common.model.BlockPosition;
 import rip.alpha.blocklogging.record.RecordService;
 import rip.alpha.blocklogging.record.capture.BlockCapture;
+import rip.alpha.blocklogging.record.state.PositionOwners;
 
 import java.util.List;
 
@@ -18,6 +20,8 @@ import java.util.List;
 public final class BlockPlaceListener implements Listener {
 
     private final RecordService records;
+
+    private final PositionOwners tnt;
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlace(BlockPlaceEvent event) {
@@ -34,6 +38,9 @@ public final class BlockPlaceListener implements Listener {
 
             this.records.submit(BlockCapture.placed(actor, state.getBlock()));
         }
+
+        if (event.getBlockPlaced().getType() == Material.TNT)
+            this.tnt.put(BlockPosition.of(event.getBlockPlaced()), actor);
     }
 
     private List<BlockState> replaced(BlockPlaceEvent event) {

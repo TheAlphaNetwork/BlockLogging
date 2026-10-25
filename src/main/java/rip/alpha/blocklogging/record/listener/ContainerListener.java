@@ -81,6 +81,11 @@ public final class ContainerListener implements Listener {
     private void log(Actor actor, BlockPosition position, ItemStack item, int change) {
         ContainerAction action = change > 0 ? ContainerAction.ADD : ContainerAction.REMOVE;
 
-        this.records.submit(new ContainerRecord(LogBase.now(actor, position), item, Math.abs(change), action));
+        this.records.submit(ContainerRecord.builder()
+                .base(LogBase.now(actor, position))
+                .item(item)
+                .amount(Math.abs(change))
+                .action(action)
+                .build());
     }
 }

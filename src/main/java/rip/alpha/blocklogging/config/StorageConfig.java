@@ -16,6 +16,11 @@ public final class StorageConfig {
     private String password = "";
     private String properties = "useSSL=false&rewriteBatchedStatements=true";
     private String tablePrefix = "bl_";
+    private String mongoUri = "mongodb://127.0.0.1:27017";
+
+    public boolean isMongo() {
+        return this.type.equalsIgnoreCase("mongodb") || this.type.equalsIgnoreCase("mongo");
+    }
 
     public boolean isMysql() {
         return this.type.equalsIgnoreCase("mysql");

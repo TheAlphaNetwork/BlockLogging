@@ -12,7 +12,7 @@ import rip.alpha.blocklogging.common.model.Actor;
 import rip.alpha.blocklogging.common.model.BlockPosition;
 import rip.alpha.blocklogging.record.RecordService;
 import rip.alpha.blocklogging.record.capture.BlockCapture;
-import rip.alpha.blocklogging.record.state.LiquidOwners;
+import rip.alpha.blocklogging.record.state.PositionOwners;
 import rip.alpha.blocklogging.record.type.BlockAction;
 
 @RequiredArgsConstructor
@@ -20,7 +20,7 @@ public final class BucketListener implements Listener {
 
     private final RecordService records;
 
-    private final LiquidOwners owners;
+    private final PositionOwners owners;
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     @SuppressWarnings("deprecation")

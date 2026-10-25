@@ -1,29 +1,21 @@
 package rip.alpha.blocklogging.rollback.model;
 
-import rip.alpha.blocklogging.record.model.RolledBackUpdate;
-
-import java.util.ArrayList;
 import java.util.List;
 
-public record RollbackPlan(
-        List<BlockTarget> blocks,
-        List<ContainerChange> containers,
-        List<EntityRespawn> entities,
-        List<RolledBackUpdate> flags,
-        int matched
-) {
+public record RollbackPlan(List<Change> changes, int matched) {
 
     public boolean isEmpty() {
         return this.matched == 0;
     }
 
-    public List<Change> changes() {
-        List<Change> changes = new ArrayList<>(this.blocks.size() + this.containers.size() + this.entities.size());
+    public List<BlockTarget> blocks() {
+        return this.changes.stream()
+                .filter(BlockTarget.class::isInstance)
+                .map(BlockTarget.class::cast)
+                .toList();
+    }
 
-        changes.addAll(this.blocks);
-        changes.addAll(this.containers);
-        changes.addAll(this.entities);
-
-        return changes;
+    public long count(Class<? extends Change> type) {
+        return this.changes.stream().filter(type::isInstance).count();
     }
 }

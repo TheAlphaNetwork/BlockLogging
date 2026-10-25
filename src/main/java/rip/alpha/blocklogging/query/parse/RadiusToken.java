@@ -3,17 +3,22 @@ package rip.alpha.blocklogging.query.parse;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import rip.alpha.blocklogging.query.exception.QueryException;
+import rip.alpha.blocklogging.query.hook.WorldEditSelections;
 import rip.alpha.blocklogging.query.model.AreaRadius;
+import rip.alpha.blocklogging.query.model.CuboidRadius;
 import rip.alpha.blocklogging.query.model.GlobalRadius;
 import rip.alpha.blocklogging.query.model.ParseContext;
 import rip.alpha.blocklogging.query.model.Radius;
 import rip.alpha.blocklogging.query.model.WorldRadius;
 
+import java.util.Locale;
 import java.util.Set;
 
 final class RadiusToken implements QueryToken {
 
     private static final String GLOBAL = "#global";
+
+    private static final Set<String> SELECTIONS = Set.of("#we", "#worldedit", "#selection");
 
     @Override
     public Set<String> prefixes() {
@@ -30,6 +35,9 @@ final class RadiusToken implements QueryToken {
         if (value.equalsIgnoreCase(GLOBAL))
             return new GlobalRadius();
 
+        if (SELECTIONS.contains(value.toLowerCase(Locale.ROOT)))
+            return selection(context);
+
         if (value.startsWith("#")) {
             String world = value.substring(1);
 
@@ -44,7 +52,28 @@ final class RadiusToken implements QueryToken {
         if (location == null)
             throw new QueryException("Console has to use r:#global or r:#<world>.");
 
-        return new AreaRadius(location.getWorld().getName(), location.getBlockX(), location.getBlockZ(), size(value, context));
+        return AreaRadius.builder()
+                .world(location.getWorld().getName())
+                .x(location.getBlockX())
+                .z(location.getBlockZ())
+                .size(size(value, context))
+                .build();
+    }
+
+    private Radius selection(ParseContext context) {
+
+        if (context.player() == null)
+            throw new QueryException("Only players have a WorldEdit selection.");
+
+        if (!Bukkit.getPluginManager().isPluginEnabled("WorldEdit"))
+            throw new QueryException("WorldEdit is not installed on this server.");
+
+        CuboidRadius selection = WorldEditSelections.of(context.player());
+
+        if (selection == null)
+            throw new QueryException("Make a WorldEdit selection first.");
+
+        return selection;
     }
 
     private int size(String value, ParseContext context) {

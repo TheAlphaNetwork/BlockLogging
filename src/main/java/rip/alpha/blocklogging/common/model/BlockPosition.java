@@ -1,19 +1,31 @@
 package rip.alpha.blocklogging.common.model;
 
+import lombok.Builder;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.jetbrains.annotations.Nullable;
 
+@Builder(toBuilder = true)
 public record BlockPosition(String world, int x, int y, int z) {
 
     public static BlockPosition of(Block block) {
-        return new BlockPosition(block.getWorld().getName(), block.getX(), block.getY(), block.getZ());
+        return BlockPosition.builder()
+                .world(block.getWorld().getName())
+                .x(block.getX())
+                .y(block.getY())
+                .z(block.getZ())
+                .build();
     }
 
     public static BlockPosition of(Location location) {
-        return new BlockPosition(location.getWorld().getName(), location.getBlockX(), location.getBlockY(), location.getBlockZ());
+        return BlockPosition.builder()
+                .world(location.getWorld().getName())
+                .x(location.getBlockX())
+                .y(location.getBlockY())
+                .z(location.getBlockZ())
+                .build();
     }
 
     @Nullable
@@ -31,7 +43,7 @@ public record BlockPosition(String world, int x, int y, int z) {
     }
 
     public BlockPosition offset(int dx, int dy, int dz) {
-        return new BlockPosition(this.world, this.x + dx, this.y + dy, this.z + dz);
+        return toBuilder().x(this.x + dx).y(this.y + dy).z(this.z + dz).build();
     }
 
     public String describe() {

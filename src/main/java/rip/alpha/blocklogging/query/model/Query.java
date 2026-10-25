@@ -1,5 +1,6 @@
 package rip.alpha.blocklogging.query.model;
 
+import lombok.Builder;
 import rip.alpha.blocklogging.query.type.Action;
 import rip.alpha.blocklogging.query.type.QueryFlag;
 
@@ -7,6 +8,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
+@Builder(toBuilder = true)
 public record Query(
         List<String> users,
         List<String> excludedUsers,
@@ -20,7 +22,15 @@ public record Query(
 ) {
 
     public static Query at(Radius radius, Set<Action> actions) {
-        return new Query(List.of(), List.of(), 0L, 0L, radius, actions, TypeFilter.none(), TypeFilter.none(), Set.of());
+        return Query.builder()
+                .users(List.of())
+                .excludedUsers(List.of())
+                .radius(radius)
+                .actions(actions)
+                .include(TypeFilter.none())
+                .exclude(TypeFilter.none())
+                .flags(Set.of())
+                .build();
     }
 
     public boolean has(QueryFlag flag) {
@@ -28,13 +38,11 @@ public record Query(
     }
 
     public Query withActions(Set<Action> actions) {
-        return new Query(this.users, this.excludedUsers, this.since, this.until, this.radius, actions, this.include, this.exclude,
-                this.flags);
+        return toBuilder().actions(actions).build();
     }
 
     public Query withRadius(Radius radius) {
-        return new Query(this.users, this.excludedUsers, this.since, this.until, radius, this.actions, this.include, this.exclude,
-                this.flags);
+        return toBuilder().radius(radius).build();
     }
 
     public Query without(QueryFlag flag) {
@@ -42,7 +50,6 @@ public record Query(
 
         remaining.remove(flag);
 
-        return new Query(this.users, this.excludedUsers, this.since, this.until, this.radius, this.actions, this.include, this.exclude,
-                Set.copyOf(remaining));
+        return toBuilder().flags(Set.copyOf(remaining)).build();
     }
 }

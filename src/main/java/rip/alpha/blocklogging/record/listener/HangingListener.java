@@ -13,7 +13,9 @@ import org.bukkit.event.hanging.HangingPlaceEvent;
 import rip.alpha.blocklogging.common.model.Actor;
 import rip.alpha.blocklogging.common.model.BlockPosition;
 import rip.alpha.blocklogging.record.RecordService;
-import rip.alpha.blocklogging.record.capture.BlockCapture;
+import rip.alpha.blocklogging.record.capture.HangingDatas;
+import rip.alpha.blocklogging.record.model.BlockRecord;
+import rip.alpha.blocklogging.record.model.LogBase;
 import rip.alpha.blocklogging.record.type.BlockAction;
 
 @RequiredArgsConstructor
@@ -49,6 +51,14 @@ public final class HangingListener implements Listener {
     private void log(Actor actor, Hanging hanging, BlockAction action) {
         Material type = hanging instanceof ItemFrame ? Material.ITEM_FRAME : Material.PAINTING;
 
-        this.records.submit(BlockCapture.raw(actor, BlockPosition.of(hanging.getLocation()), type.getId(), action));
+        LogBase base = LogBase.now(actor, BlockPosition.of(hanging.getLocation()));
+
+        this.records.submit(BlockRecord.builder()
+                .base(base)
+                .type(type.getId())
+                .data(0)
+                .action(action)
+                .meta(HangingDatas.of(hanging))
+                .build());
     }
 }

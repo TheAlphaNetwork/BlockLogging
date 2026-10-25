@@ -39,6 +39,12 @@ public final class EntityBlockListener implements Listener {
 
         LogBase base = LogBase.now(actor, BlockPosition.of(block));
 
-        this.records.submit(new BlockRecord(base, event.getTo().getId(), event.getData(), BlockAction.PLACE, null));
+        this.records.submit(BlockRecord.builder()
+                .base(base)
+                .type(event.getTo().getId())
+                .data(event.getData())
+                .action(BlockAction.PLACE)
+                .meta(null)
+                .build());
     }
 }

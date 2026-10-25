@@ -5,10 +5,12 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Projectile;
+import org.bukkit.entity.TNTPrimed;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.jetbrains.annotations.Nullable;
 import rip.alpha.blocklogging.common.model.Actor;
+import rip.alpha.blocklogging.record.state.PositionOwners;
 
 @UtilityClass
 public class Causes {
@@ -22,10 +24,13 @@ public class Causes {
     public final Actor LAVA = Actor.system("lava");
     public final Actor EXPLOSION = Actor.system("explosion");
 
-    public Actor explosion(@Nullable Entity source) {
+    public Actor explosion(@Nullable Entity source, PositionOwners tnt) {
 
         if (source == null)
             return EXPLOSION;
+
+        if (source instanceof TNTPrimed primed)
+            return TntSources.of(primed, tnt);
 
         return switch (source.getType()) {
             case PRIMED_TNT -> Actor.system("tnt");

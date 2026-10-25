@@ -22,11 +22,11 @@ import rip.alpha.blocklogging.rollback.RollbackService;
 import rip.alpha.blocklogging.rollback.command.RollbackCommand;
 import rip.alpha.blocklogging.rollback.listener.PreviewListener;
 import rip.alpha.blocklogging.storage.StorageService;
+import rip.alpha.blocklogging.storage.exception.StoreException;
+import rip.alpha.blocklogging.storage.store.LogStore;
 import rip.alpha.libraries.Libraries;
 import rip.alpha.libraries.command.CommandService;
 
-import java.io.IOException;
-import java.sql.SQLException;
 import java.util.logging.Level;
 
 @Getter
@@ -46,21 +46,24 @@ public final class BlockLogging extends JavaPlugin {
     public void onEnable() {
         this.configStore = new ConfigStore(getDataFolder().toPath(), getLogger());
         this.configStore.load();
-        this.storage = new StorageService(this.configStore.getConfig().getStorage(), getDataFolder().toPath());
+        this.storage = new StorageService(this.configStore.getConfig().getStorage(), getDataFolder().toPath(), getLogger());
 
         try {
-            this.storage.install();
-        } catch (SQLException | IOException exception) {
-            getLogger().log(Level.SEVERE, "Could not open the " + this.storage.getDialect().name() + " database, disabling", exception);
+            this.storage.open();
+        } catch (StoreException exception) {
+            getLogger().log(Level.SEVERE, "Could not open the " + this.storage.name() + " database, disabling", exception);
             getServer().getPluginManager().disablePlugin(this);
 
             return;
         }
 
-        this.records = new RecordService(this.storage, this.configStore, getLogger());
-        this.queries = new QueryService(this, this.storage, this.configStore, getLogger());
-        this.rollbacks = new RollbackService(this, this.storage, this.records, this.configStore, getLogger());
+        LogStore store = this.storage.getStore();
+
+        this.records = new RecordService(store, this.configStore, getLogger());
+        this.queries = new QueryService(this, store, this.configStore, getLogger());
+        this.rollbacks = new RollbackService(this, store, this.records, this.configStore, getLogger());
         this.records.start();
+        this.rollbacks.restore();
 
         InspectService inspect = new InspectService(this.queries);
 
@@ -98,5 +101,7 @@ public final class BlockLogging extends JavaPlugin {
         } catch (InterruptedException _) {
             Thread.currentThread().interrupt();
         }
+
+        this.storage.close();
     }
 }

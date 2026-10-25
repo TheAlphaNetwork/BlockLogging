@@ -5,8 +5,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import rip.alpha.blocklogging.record.RecordService;
-import rip.alpha.blocklogging.record.state.LiquidOwners;
 import rip.alpha.blocklogging.record.state.OpenContainers;
+import rip.alpha.blocklogging.record.state.PositionOwners;
 
 import java.util.List;
 
@@ -14,13 +14,14 @@ import java.util.List;
 public class RecordListeners {
 
     public void register(Plugin plugin, RecordService records) {
-        LiquidOwners owners = new LiquidOwners();
+        PositionOwners owners = new PositionOwners();
+        PositionOwners tnt = new PositionOwners();
 
         PluginManager manager = plugin.getServer().getPluginManager();
         List<Listener> listeners = List.of(
                 new BlockBreakListener(records),
-                new BlockPlaceListener(records),
-                new ExplosionListener(records),
+                new BlockPlaceListener(records, tnt),
+                new ExplosionListener(records, tnt),
                 new FireListener(records),
                 new BucketListener(records, owners),
                 new LiquidFlowListener(records, owners),
@@ -28,6 +29,7 @@ public class RecordListeners {
                 new EntityBlockListener(records),
                 new NatureListener(records),
                 new HangingListener(records),
+                new ItemFrameListener(records),
                 new ContainerListener(records, new OpenContainers()),
                 new ItemListener(records),
                 new SignListener(records),

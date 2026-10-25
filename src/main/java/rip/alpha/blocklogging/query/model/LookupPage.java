@@ -1,7 +1,10 @@
 package rip.alpha.blocklogging.query.model;
 
+import lombok.Builder;
+
 import java.util.List;
 
+@Builder
 public record LookupPage(List<LookupRow> rows, int total, int page, int pageSize) {
 
     public int pages() {

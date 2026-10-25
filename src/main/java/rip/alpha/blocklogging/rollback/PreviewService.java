@@ -45,7 +45,7 @@ public final class PreviewService {
         Operation operation = preview.operation();
 
         PreviewBlocks.revert(player, preview.positions());
-        this.rollbacks.run(player, new Operation(operation.query().without(QueryFlag.PREVIEW), operation.kind()));
+        this.rollbacks.run(player, Operation.of(operation.query().without(QueryFlag.PREVIEW), operation.kind()));
     }
 
     public void cancel(Player player) {

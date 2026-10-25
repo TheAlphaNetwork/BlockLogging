@@ -7,7 +7,7 @@ import rip.alpha.blocklogging.record.model.LogRecord;
 import rip.alpha.blocklogging.record.model.PendingWrite;
 import rip.alpha.blocklogging.record.write.LogWriter;
 import rip.alpha.blocklogging.record.write.WriterStats;
-import rip.alpha.blocklogging.storage.StorageService;
+import rip.alpha.blocklogging.storage.store.LogStore;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -27,10 +27,10 @@ public final class RecordService {
     @Nullable
     private Thread thread;
 
-    public RecordService(StorageService storage, ConfigStore configs, Logger logger) {
+    public RecordService(LogStore store, ConfigStore configs, Logger logger) {
         this.configs = configs;
         this.queue = new LinkedBlockingQueue<>(configs.getConfig().getWriter().getMaxQueued());
-        this.writer = new LogWriter(this.queue, storage, () -> configs.getConfig().getWriter(), logger);
+        this.writer = new LogWriter(this.queue, store, () -> configs.getConfig().getWriter(), logger);
     }
 
     public void start() {

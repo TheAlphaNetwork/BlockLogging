@@ -19,7 +19,14 @@ public final class PurgeService {
 
     public void purge(CommandSender sender, long before, @Nullable String world, boolean optimize) {
         Chat.info(sender, "Purge queued, it runs after the pending logs are written.");
-        this.records.submit(new PurgeRequest(before, world, optimize, result -> Tasks.sync(this.plugin, () -> report(sender, result))));
+        PurgeRequest request = PurgeRequest.builder()
+                .before(before)
+                .world(world)
+                .optimize(optimize)
+                .callback(result -> Tasks.sync(this.plugin, () -> report(sender, result)))
+                .build();
+
+        this.records.submit(request);
     }
 
     private void report(CommandSender sender, PurgeResult result) {

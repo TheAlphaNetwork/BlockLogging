@@ -57,6 +57,11 @@ public final class ItemListener implements Listener {
 
         LogBase base = LogBase.now(Actor.player(player), BlockPosition.of(location));
 
-        this.records.submit(new ItemRecord(base, ItemCopies.single(item), item.getAmount(), action));
+        this.records.submit(ItemRecord.builder()
+                .base(base)
+                .item(ItemCopies.single(item))
+                .amount(item.getAmount())
+                .action(action)
+                .build());
     }
 }

@@ -7,6 +7,7 @@ import org.jetbrains.annotations.Nullable;
 import rip.alpha.blocklogging.record.model.BannerData;
 import rip.alpha.blocklogging.record.model.BlockMeta;
 import rip.alpha.blocklogging.record.model.ContainerMeta;
+import rip.alpha.blocklogging.record.model.HangingData;
 import rip.alpha.blocklogging.record.model.SignMeta;
 import rip.alpha.blocklogging.record.model.SkullData;
 import rip.alpha.blocklogging.record.model.SpawnerMeta;
@@ -22,6 +23,7 @@ public class BlockMetaCodec {
     public final int SPAWNER = 2;
     public final int SKULL = 3;
     public final int BANNER = 4;
+    public final int HANGING = 5;
 
     public byte @Nullable [] encode(@Nullable BlockMeta meta) throws IOException {
 
@@ -71,6 +73,15 @@ public class BlockMetaCodec {
                 output.writeByte(BANNER);
                 output.writeUTF(banner.base().name());
                 output.writeObject(banner.patterns().toArray(new Pattern[0]));
+            }
+
+            case HangingData hanging -> {
+                output.writeByte(HANGING);
+                output.writeUTF(hanging.type().name());
+                output.writeUTF(hanging.facing().name());
+                output.writeObject(hanging.item());
+                output.writeUTF(hanging.rotation() == null ? "" : hanging.rotation().name());
+                output.writeUTF(hanging.art() == null ? "" : hanging.art().name());
             }
         }
     }

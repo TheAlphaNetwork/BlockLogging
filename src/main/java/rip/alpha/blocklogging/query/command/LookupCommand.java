@@ -72,7 +72,12 @@ public final class LookupCommand {
 
         int size = radius > 0 ? Math.min(radius, this.configs.getConfig().getRollback().getMaxRadius()) : nearRadius();
 
-        AreaRadius area = new AreaRadius(location.getWorld().getName(), location.getBlockX(), location.getBlockZ(), size);
+        AreaRadius area = AreaRadius.builder()
+                .world(location.getWorld().getName())
+                .x(location.getBlockX())
+                .z(location.getBlockZ())
+                .size(size)
+                .build();
 
         run(player, Query.at(area, Action.LOOKUP_DEFAULTS));
     }

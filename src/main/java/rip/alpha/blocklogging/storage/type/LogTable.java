@@ -9,7 +9,7 @@ public enum LogTable {
 
     BLOCK("block", true, true),
     CONTAINER("container", true, true),
-    ITEM("item", true, false),
+    ITEM("item", true, true),
     SIGN("sign", false, false),
     KILL("entity_kill", true, true),
     CHAT("chat", false, false),

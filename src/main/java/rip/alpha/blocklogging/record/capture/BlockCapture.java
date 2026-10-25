@@ -16,7 +16,13 @@ public class BlockCapture {
     public BlockRecord broke(Actor actor, BlockState state) {
         LogBase base = LogBase.now(actor, BlockPosition.of(state.getBlock()));
 
-        return new BlockRecord(base, state.getTypeId(), state.getRawData(), BlockAction.BREAK, BlockMetas.of(state));
+        return BlockRecord.builder()
+                .base(base)
+                .type(state.getTypeId())
+                .data(state.getRawData())
+                .action(BlockAction.BREAK)
+                .meta(BlockMetas.of(state))
+                .build();
     }
 
     public BlockRecord broke(Actor actor, Block block) {
@@ -26,7 +32,13 @@ public class BlockCapture {
     public BlockRecord placed(Actor actor, BlockState state) {
         LogBase base = LogBase.now(actor, BlockPosition.of(state.getBlock()));
 
-        return new BlockRecord(base, state.getTypeId(), state.getRawData(), BlockAction.PLACE, null);
+        return BlockRecord.builder()
+                .base(base)
+                .type(state.getTypeId())
+                .data(state.getRawData())
+                .action(BlockAction.PLACE)
+                .meta(null)
+                .build();
     }
 
     public BlockRecord placed(Actor actor, Block block) {
@@ -36,16 +48,34 @@ public class BlockCapture {
     public BlockRecord clicked(Actor actor, Block block) {
         LogBase base = LogBase.now(actor, BlockPosition.of(block));
 
-        return new BlockRecord(base, block.getTypeId(), block.getData(), BlockAction.CLICK, null);
+        return BlockRecord.builder()
+                .base(base)
+                .type(block.getTypeId())
+                .data(block.getData())
+                .action(BlockAction.CLICK)
+                .meta(null)
+                .build();
     }
 
     public BlockRecord moved(Actor actor, Block source, Block destination) {
         LogBase base = LogBase.now(actor, BlockPosition.of(destination));
 
-        return new BlockRecord(base, source.getTypeId(), source.getData(), BlockAction.PLACE, null);
+        return BlockRecord.builder()
+                .base(base)
+                .type(source.getTypeId())
+                .data(source.getData())
+                .action(BlockAction.PLACE)
+                .meta(null)
+                .build();
     }
 
     public BlockRecord raw(Actor actor, BlockPosition position, int type, BlockAction action) {
-        return new BlockRecord(LogBase.now(actor, position), type, 0, action, null);
+        return BlockRecord.builder()
+                .base(LogBase.now(actor, position))
+                .type(type)
+                .data(0)
+                .action(action)
+                .meta(null)
+                .build();
     }
 }

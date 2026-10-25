@@ -1,4 +1,7 @@
 package rip.alpha.blocklogging.rollback.model;
 
-public record ApplyResult(int blocks, int containers, int entities, int skipped, long millis) {
+import lombok.Builder;
+
+@Builder
+public record ApplyResult(int blocks, int hangings, int containers, int items, int entities, int skipped, long millis) {
 }

@@ -9,6 +9,7 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import rip.alpha.blocklogging.common.model.BlockPosition;
 import rip.alpha.blocklogging.record.RecordService;
 import rip.alpha.blocklogging.record.capture.Causes;
+import rip.alpha.blocklogging.record.capture.EntityTraits;
 import rip.alpha.blocklogging.record.model.KillRecord;
 import rip.alpha.blocklogging.record.model.LogBase;
 
@@ -27,6 +28,6 @@ public final class KillListener implements Listener {
 
         LogBase base = LogBase.now(Causes.killer(entity), BlockPosition.of(entity.getLocation()));
 
-        this.records.submit(new KillRecord(base, entity.getType()));
+        this.records.submit(new KillRecord(base, entity.getType(), EntityTraits.capture(entity)));
     }
 }
