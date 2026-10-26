@@ -3,7 +3,7 @@ package rip.alpha.blocklogging.query.filter;
 import lombok.experimental.UtilityClass;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import rip.alpha.blocklogging.common.hook.RankCache;
+import rip.alpha.blocklogging.common.model.Ranks;
 import rip.alpha.blocklogging.query.model.LookupPage;
 import rip.alpha.blocklogging.query.model.LookupRow;
 import rip.alpha.blocklogging.storage.type.LogTable;
@@ -15,14 +15,14 @@ public class StaffCommands {
 
     private final String HIDDEN = "[hidden]";
 
-    public LookupPage redact(CommandSender viewer, LookupPage page) {
+    public LookupPage redact(CommandSender viewer, LookupPage page, Ranks ranks) {
 
         if (viewer.isOp() || !(viewer instanceof Player player))
             return page;
 
-        int weight = RankCache.weight(player.getUniqueId());
+        int weight = ranks.weight(player.getUniqueId());
 
-        List<LookupRow> rows = page.rows().stream().map(row -> hidden(row, player, weight) ? hide(row) : row).toList();
+        List<LookupRow> rows = page.rows().stream().map(row -> hidden(row, player, weight, ranks) ? hide(row) : row).toList();
 
         return page.toBuilder().rows(rows).build();
     }
@@ -31,11 +31,11 @@ public class StaffCommands {
         return row.toBuilder().text(HIDDEN).build();
     }
 
-    private boolean hidden(LookupRow row, Player viewer, int weight) {
+    private boolean hidden(LookupRow row, Player viewer, int weight, Ranks ranks) {
 
         if (row.table() != LogTable.COMMAND || row.uuid() == null || row.uuid().equals(viewer.getUniqueId()))
             return false;
 
-        return RankCache.weight(row.uuid()) >= weight;
+        return ranks.weight(row.uuid()) >= weight;
     }
 }

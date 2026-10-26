@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
+import rip.alpha.blocklogging.common.hook.RankCache;
 import rip.alpha.blocklogging.common.text.Chat;
 import rip.alpha.blocklogging.config.ConfigStore;
 import rip.alpha.blocklogging.query.exception.QueryException;
@@ -29,6 +30,8 @@ import rip.alpha.libraries.task.Tasks;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -94,21 +97,39 @@ public final class QueryService {
     }
 
     private void fetch(CommandSender sender, SavedLookup lookup, PageRequest request, BiConsumer<LookupPage, NameColors> show) {
+        LookupPage found;
 
         try {
-            LookupPage page = ReplacedRows.merge(StaffCommands.redact(sender, this.store.lookup(lookup.query(), request)));
-
-            NameColors colors = NameColoring.of(page);
-
-            Tasks.sync(this.plugin, () -> show.accept(page, colors));
+            found = this.store.lookup(lookup.query(), request);
 
         } catch (QueryException exception) {
             Tasks.sync(this.plugin, () -> Chat.error(sender, exception.getMessage()));
+            return;
 
         } catch (StoreException exception) {
-            this.logger.log(Level.WARNING, "Lookup failed", exception);
-            Tasks.sync(this.plugin, () -> Chat.error(sender, "The lookup failed, check the console."));
+            fail(sender, exception);
+            return;
         }
+
+        Set<UUID> subjects = NameColoring.subjects(found);
+
+        if (sender instanceof Player player)
+            subjects.add(player.getUniqueId());
+
+        RankCache.ranks(subjects).thenAccept(ranks -> {
+            LookupPage page = ReplacedRows.merge(StaffCommands.redact(sender, found, ranks));
+            NameColors colors = NameColoring.of(page, ranks);
+
+            Tasks.sync(this.plugin, () -> show.accept(page, colors));
+        }).exceptionally(error -> {
+            fail(sender, error);
+            return null;
+        });
+    }
+
+    private void fail(CommandSender sender, Throwable error) {
+        this.logger.log(Level.WARNING, "Lookup failed", error);
+        Tasks.sync(this.plugin, () -> Chat.error(sender, "The lookup failed, check the console."));
     }
 
     private int pageSize(int requested) {

@@ -1,7 +1,6 @@
 package rip.alpha.blocklogging.common.hook;
 
 import lombok.experimental.UtilityClass;
-import org.jetbrains.annotations.Nullable;
 import rip.alpha.blocklogging.common.model.RankSnapshot;
 import rip.alpha.core.api.Core;
 import rip.alpha.core.api.profile.PlayerProfile;
@@ -11,27 +10,24 @@ import rip.alpha.libraries.text.Colors;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 @UtilityClass
 class CoreRanks {
 
-    private final long TIMEOUT_MILLIS = 400;
+    private final long TIMEOUT_MILLIS = 2_000;
 
-    @Nullable
-    RankSnapshot snapshot(UUID uuid, long expires) {
+    CompletableFuture<RankSnapshot> load(UUID uuid, long expires) {
+        ProfileService profiles = Core.api().profiles();
+        Optional<PlayerProfile> online = profiles.online(uuid);
 
-        try {
-            ProfileService profiles = Core.api().profiles();
+        if (online.isPresent())
+            return CompletableFuture.completedFuture(snapshot(online.get().rank(), expires));
 
-            Optional<PlayerProfile> online = profiles.online(uuid);
-            Optional<PlayerProfile> profile = online.isPresent() ? online : profiles.load(uuid).get(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
-
-            return profile.map(found -> snapshot(found.rank(), expires)).orElse(null);
-
-        } catch (Exception _) {
-            return null;
-        }
+        return profiles.load(uuid)
+                .orTimeout(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)
+                .thenApply(profile -> profile.map(found -> snapshot(found.rank(), expires)).orElse(null));
     }
 
     private RankSnapshot snapshot(Rank rank, long expires) {
