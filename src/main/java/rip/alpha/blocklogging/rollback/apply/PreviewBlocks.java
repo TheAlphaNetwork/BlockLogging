@@ -1,12 +1,13 @@
 package rip.alpha.blocklogging.rollback.apply;
 
-import com.github.retrooper.packetevents.PacketEvents;
-import com.github.retrooper.packetevents.util.Vector3i;
-import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerBlockChange;
 import lombok.experimental.UtilityClass;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
+import org.bukkit.material.MaterialData;
+import rip.alpha.aspigot.block.BlockPositions;
+import rip.alpha.aspigot.packet.Packets;
+import rip.alpha.aspigot.packet.play.clientbound.world.block.BlockChangePacket;
 import rip.alpha.blocklogging.common.model.BlockPosition;
 import rip.alpha.blocklogging.rollback.model.BlockTarget;
 
@@ -40,8 +41,10 @@ public class PreviewBlocks {
     }
 
     private void send(Player player, BlockPosition position, int type, int data) {
-        Vector3i vector = new Vector3i(position.x(), position.y(), position.z());
+        BlockChangePacket packet = BlockChangePacket.create()
+                .position(BlockPositions.of(position.x(), position.y(), position.z()))
+                .block(new MaterialData(type, (byte) (data & DATA_MASK)));
 
-        PacketEvents.getAPI().getPlayerManager().sendPacket(player, new WrapperPlayServerBlockChange(vector, type << 4 | data & DATA_MASK));
+        Packets.send(player, packet);
     }
 }

@@ -2,8 +2,8 @@ package rip.alpha.blocklogging.query.render;
 
 import lombok.experimental.UtilityClass;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.v1_8_R3.util.CraftMagicNumbers;
 import org.bukkit.inventory.ItemStack;
+import rip.alpha.aspigot.item.Items;
 import rip.alpha.blocklogging.query.model.LookupRow;
 
 @UtilityClass
@@ -27,7 +27,7 @@ public class RowIcons {
     private ItemStack block(LookupRow row) {
         Material material = BlockItems.item(Material.getMaterial(row.type()));
 
-        if (material == null || CraftMagicNumbers.getItem(material) == null)
+        if (!Items.isItem(material))
             return new ItemStack(Material.BARRIER);
 
         int amount = Math.clamp(row.amount(), 1, MAX_STACK);
